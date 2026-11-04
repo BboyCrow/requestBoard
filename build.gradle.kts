@@ -3,7 +3,8 @@ plugins {
     id("dev.kikugie.loom-back-compat")
 }
 
-version = "${property("mod.version")}+${sc.current.version}"
+val modVersion = property("mod.version") as String
+version = "$modVersion+${sc.current.version}"
 base.archivesName = property("mod.id") as String
 
 val requiredJava: JavaVersion = if (sc.current.parsed >= "26.1") JavaVersion.VERSION_25 else JavaVersion.VERSION_21
@@ -79,6 +80,6 @@ tasks {
         group = "build"
         description = "Builds the mod jar and copies it to build/libs/<mod version>/"
         from(loomx.modJar.flatMap { it.archiveFile })
-        into(rootProject.layout.buildDirectory.dir("libs/${property("mod.version")}"))
+        into(rootProject.layout.buildDirectory.dir("libs/$modVersion"))
     }
 }
