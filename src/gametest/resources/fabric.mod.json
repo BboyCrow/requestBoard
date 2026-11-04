@@ -5,7 +5,7 @@
 	"name": "RequestBoard client tests",
 	"environment": "*",
 	"entrypoints": {
-		"fabric-client-gametest": ["io.github.bboycrow.requestboard.gametest.RequestBoardClientTest"]
+		"fabric-client-gametest": ["io.github.bboycrow.requestboard.gametest.RequestBoardClientTest", "io.github.bboycrow.requestboard.gametest.GalleryShots"]
 	},
 	"depends": {
 		"requestboard": "*"
