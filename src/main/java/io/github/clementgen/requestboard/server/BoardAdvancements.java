@@ -1,5 +1,6 @@
 package io.github.clementgen.requestboard.server;
 
+import io.github.clementgen.requestboard.Compat;
 import io.github.clementgen.requestboard.RequestBoard;
 import io.github.clementgen.requestboard.data.RequestStorage;
 import net.minecraft.advancements.AdvancementHolder;
@@ -23,7 +24,7 @@ public final class BoardAdvancements {
 	}
 
 	public static void grant(ServerPlayer player, String name) {
-		AdvancementHolder holder = player.level().getServer().getAdvancements().get(RequestBoard.id(name));
+		AdvancementHolder holder = Compat.server(player).getAdvancements().get(RequestBoard.id(name));
 		if (holder != null) {
 			player.getAdvancements().award(holder, "done");
 		}

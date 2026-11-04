@@ -8,6 +8,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.BlockItemStateProperties;
+//? if >=1.21.5
 import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.block.Block;
 
@@ -29,9 +30,15 @@ public class RequestBoardItem extends BlockItem {
 		return roof == null ? BoardRoof.STONE : roof;
 	}
 
+	//? if >=1.21.5 {
 	@Override
 	@SuppressWarnings("deprecation")
 	public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag flag) {
+	//?} else {
+	/*@Override
+	public void appendHoverText(ItemStack stack, TooltipContext context, java.util.List<Component> lines, TooltipFlag flag) {
+		Consumer<Component> builder = lines::add;
+	*///?}
 		builder.accept(Component.translatable("requestboard.tooltip.wood",
 			Component.translatable("requestboard.wood." + wood(stack).getSerializedName())).withStyle(ChatFormatting.GRAY));
 		builder.accept(Component.translatable("requestboard.tooltip.roof",

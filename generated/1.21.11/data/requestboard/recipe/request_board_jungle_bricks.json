@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "request_board",
+  "key": {
+    "S": "minecraft:brick_slab",
+    "P": "minecraft:jungle_planks",
+    "B": "minecraft:writable_book",
+    "F": "minecraft:jungle_fence"
+  },
+  "pattern": [
+    "SSS",
+    "PBP",
+    "F F"
+  ],
+  "result": {
+    "id": "requestboard:request_board",
+    "count": 1,
+    "components": {
+      "minecraft:block_state": {
+        "wood": "jungle",
+        "roof": "bricks"
+      }
+    }
+  }
+}

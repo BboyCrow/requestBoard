@@ -12,6 +12,7 @@ public enum BoardWood implements StringRepresentable {
 	DARK_OAK("dark_oak"),
 	MANGROVE("mangrove"),
 	CHERRY("cherry"),
+	//? if >=1.21.4
 	PALE_OAK("pale_oak"),
 	CRIMSON("crimson"),
 	WARPED("warped"),

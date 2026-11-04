@@ -1,0 +1,42 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "request_board",
+  "key": {
+    "S": [
+      {
+        "item": "minecraft:tuff_slab"
+      },
+      {
+        "item": "minecraft:polished_tuff_slab"
+      },
+      {
+        "item": "minecraft:tuff_brick_slab"
+      }
+    ],
+    "P": {
+      "item": "minecraft:crimson_planks"
+    },
+    "B": {
+      "item": "minecraft:writable_book"
+    },
+    "F": {
+      "item": "minecraft:crimson_fence"
+    }
+  },
+  "pattern": [
+    "SSS",
+    "PBP",
+    "F F"
+  ],
+  "result": {
+    "id": "requestboard:request_board",
+    "count": 1,
+    "components": {
+      "minecraft:block_state": {
+        "wood": "crimson",
+        "roof": "tuff"
+      }
+    }
+  }
+}

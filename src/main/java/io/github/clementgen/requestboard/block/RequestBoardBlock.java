@@ -7,7 +7,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -16,7 +15,6 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -28,6 +26,13 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+//? if >=1.21.2 {
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.ScheduledTickAccess;
+//?} else
+/*import net.minecraft.world.level.LevelAccessor;*/
+//? if <26.1
+/*import com.mojang.serialization.MapCodec;*/
 
 /**
  * The notice board. Boards facing the same way merge with their neighbours (left, right, above, below)
@@ -43,6 +48,9 @@ public class RequestBoardBlock extends HorizontalDirectionalBlock {
 	public static final BooleanProperty UP = BooleanProperty.create("up");
 	public static final BooleanProperty DOWN = BooleanProperty.create("down");
 
+	//? if <26.1
+	/*public static final MapCodec<RequestBoardBlock> CODEC = simpleCodec(RequestBoardBlock::new);*/
+
 	private static final Map<Integer, VoxelShape> SHAPES = new ConcurrentHashMap<>();
 
 	public RequestBoardBlock(BlockBehaviour.Properties properties) {
@@ -57,6 +65,13 @@ public class RequestBoardBlock extends HorizontalDirectionalBlock {
 			.setValue(DOWN, false));
 	}
 
+	//? if <26.1 {
+	/*@Override
+	protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
+		return CODEC;
+	}
+	*///?}
+
 	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		builder.add(FACING, WOOD, ROOF, LEFT, RIGHT, UP, DOWN);
@@ -68,11 +83,19 @@ public class RequestBoardBlock extends HorizontalDirectionalBlock {
 		return connect(state, context.getLevel(), context.getClickedPos());
 	}
 
+	//? if >=1.21.2 {
 	@Override
 	protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction directionToNeighbour,
 			BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
 		return connect(state, level, pos);
 	}
+	//?} else {
+	/*@Override
+	protected BlockState updateShape(BlockState state, Direction directionToNeighbour, BlockState neighbourState, LevelAccessor level,
+			BlockPos pos, BlockPos neighbourPos) {
+		return connect(state, level, pos);
+	}
+	*///?}
 
 	/** Recomputes the four connections from the neighbours. */
 	public static BlockState connect(BlockState state, BlockGetter level, BlockPos pos) {
@@ -97,13 +120,23 @@ public class RequestBoardBlock extends HorizontalDirectionalBlock {
 		Direction facing = state.getValue(FACING);
 		int key = facing.get2DDataValue() << 4 | (left ? 8 : 0) | (right ? 4 : 0) | (up ? 2 : 0) | (down ? 1 : 0);
 		return SHAPES.computeIfAbsent(key, k -> {
-			VoxelShape north = Block.box(left ? 0 : 2, down ? 0 : 2, 7, right ? 16 : 14, up ? 16 : 14, 9);
+			VoxelShape shape = box(facing, left ? 0 : 2, down ? 0 : 2, 7, right ? 16 : 14, up ? 16 : 14, 9);
 			int postTop = up ? 16 : 14;
-			if (!left) north = Shapes.or(north, Block.box(0, 0, 6, 2, postTop, 10));
-			if (!right) north = Shapes.or(north, Block.box(14, 0, 6, 16, postTop, 10));
-			if (!up) north = Shapes.or(north, Block.box(0, 14, 3, 16, 16, 13));
-			return Shapes.rotateHorizontal(north).get(facing);
+			if (!left) shape = Shapes.or(shape, box(facing, 0, 0, 6, 2, postTop, 10));
+			if (!right) shape = Shapes.or(shape, box(facing, 14, 0, 6, 16, postTop, 10));
+			if (!up) shape = Shapes.or(shape, box(facing, 0, 14, 3, 16, 16, 13));
+			return shape;
 		});
+	}
+
+	/** A box given for a north-facing board, turned to face the given direction (same turn as the blockstate models). */
+	private static VoxelShape box(Direction facing, double x0, double y0, double z0, double x1, double y1, double z1) {
+		return switch (facing) {
+			case EAST -> Block.box(16 - z1, y0, x0, 16 - z0, y1, x1);
+			case SOUTH -> Block.box(16 - x1, y0, 16 - z1, 16 - x0, y1, 16 - z0);
+			case WEST -> Block.box(z0, y0, 16 - x1, z1, y1, 16 - x0);
+			default -> Block.box(x0, y0, z0, x1, y1, z1);
+		};
 	}
 
 	@Override
@@ -114,10 +147,17 @@ public class RequestBoardBlock extends HorizontalDirectionalBlock {
 		return InteractionResult.SUCCESS;
 	}
 
+	//? if >=1.21.5 {
 	@Override
 	protected ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData) {
 		return withVariant(new ItemStack(this), state.getValue(WOOD), state.getValue(ROOF));
 	}
+	//?} else {
+	/*@Override
+	public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
+		return withVariant(new ItemStack(this), state.getValue(WOOD), state.getValue(ROOF));
+	}
+	*///?}
 
 	/** Stores the wood and roof in the item so the placed block keeps them. */
 	public static ItemStack withVariant(ItemStack stack, BoardWood wood, BoardRoof roof) {

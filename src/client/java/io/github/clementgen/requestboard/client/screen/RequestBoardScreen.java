@@ -1,6 +1,7 @@
 package io.github.clementgen.requestboard.client.screen;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import io.github.clementgen.requestboard.Compat;
 import io.github.clementgen.requestboard.RequestBoard;
 import io.github.clementgen.requestboard.client.BoardStyle;
 import io.github.clementgen.requestboard.client.ClientBoardState;
@@ -22,18 +23,17 @@ import java.util.UUID;
 import java.util.function.IntConsumer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.PlayerFaceExtractor;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
+//? if >=1.21.9 {
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
+//?}
 import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -41,15 +41,21 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
-import net.minecraft.server.permissions.Permissions;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+//? if >=26.1 {
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.PlayerFaceExtractor;
 import net.minecraft.world.item.component.ResolvableProfile;
-import org.jspecify.annotations.Nullable;
+//?} else {
+/*import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.resources.DefaultPlayerSkin;
+*///?}
+import org.jetbrains.annotations.Nullable;
 
 /** The notice board: list of requests, creation page and "my contracts". */
 public class RequestBoardScreen extends Screen {
@@ -110,6 +116,7 @@ public class RequestBoardScreen extends Screen {
 	private final List<ClickZone> zones = new ArrayList<>();
 	private final List<AbstractWidget> parchmentFields = new ArrayList<>();
 	private final Map<AbstractWidget, Component> fieldHints = new HashMap<>();
+	//? if >=26.1
 	private final Map<UUID, ResolvableProfile> profiles = new HashMap<>();
 
 	private Tab tab = Tab.BOARD;
@@ -306,7 +313,7 @@ public class RequestBoardScreen extends Screen {
 		UUID me = this.myId();
 		boolean isCreator = request.creator().equals(me);
 		boolean accepted = request.isAcceptedBy(me);
-		boolean isOp = this.minecraft.player != null && this.minecraft.player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER);
+		boolean isOp = this.minecraft.player != null && Compat.isOperator(this.minecraft.player);
 
 		List<Button> buttons = new ArrayList<>();
 		if (accepted) {
@@ -409,6 +416,7 @@ public class RequestBoardScreen extends Screen {
 		this.addRenderableWidget(title);
 
 		if (cfg.maxDetailsLength > 0) {
+			//? if >=1.21.6 {
 			MultiLineEditBox details = MultiLineEditBox.builder()
 				.setX(x)
 				.setY(this.top + 72)
@@ -418,6 +426,8 @@ public class RequestBoardScreen extends Screen {
 				.setTextShadow(false)
 				.setCursorColor(INK)
 				.build(this.font, 300, 34, Component.translatable("requestboard.create.details"));
+			//?} else
+			/*MultiLineEditBox details = new MultiLineEditBox(this.font, x, this.top + 72, 300, 34, Component.empty(), Component.translatable("requestboard.create.details"));*/
 			this.parchmentFields.add(details);
 			this.fieldHints.put(details, Component.translatable("requestboard.create.details_hint"));
 			details.setCharacterLimit(cfg.maxDetailsLength);
@@ -461,6 +471,7 @@ public class RequestBoardScreen extends Screen {
 	private EditBox field(int x, int y, int w, int h, Component narration) {
 		EditBox box = new EditBox(this.font, x + 4, y + (h - 8) / 2, w - 8, 9, narration);
 		box.setBordered(false);
+		//? if >=1.21.6
 		box.setTextShadow(false);
 		box.setTextColor(INK);
 		box.setTextColorUneditable(INK_SOFT);
@@ -468,7 +479,7 @@ public class RequestBoardScreen extends Screen {
 		return box;
 	}
 
-	private void drawFields(GuiGraphicsExtractor g) {
+	private void drawFields(Gfx g) {
 		for (AbstractWidget widget : this.parchmentFields) {
 			boolean multi = widget instanceof MultiLineEditBox;
 			int x = multi ? widget.getX() : widget.getX() - 4;
@@ -509,7 +520,7 @@ public class RequestBoardScreen extends Screen {
 	}
 
 	private void pickItem(ItemStack stack) {
-		Holder<Item> holder = stack.typeHolder();
+		Holder<Item> holder = Compat.holder(stack);
 		for (ObjectiveDraft draft : this.draftObjectives) {
 			if (draft.item.value() == holder.value()) {
 				this.pickerOpen = false;
@@ -595,18 +606,30 @@ public class RequestBoardScreen extends Screen {
 
 	// ------------------------------------------------------------------ input
 
+	//? if >=1.21.9 {
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
 		if (super.mouseClicked(event, doubleClick)) {
 			return true;
 		}
-		double mx = event.x();
-		double my = event.y();
+		return this.handleClick(event.x(), event.y(), event.button());
+	}
+	//?} else {
+	/*@Override
+	public boolean mouseClicked(double mouseX, double mouseY, int button) {
+		if (super.mouseClicked(mouseX, mouseY, button)) {
+			return true;
+		}
+		return this.handleClick(mouseX, mouseY, button);
+	}
+	*///?}
+
+	private boolean handleClick(double mx, double my, int button) {
 		for (int i = this.zones.size() - 1; i >= 0; i--) {
 			ClickZone zone = this.zones.get(i);
 			if (zone.contains(mx, my)) {
 				this.playClick();
-				zone.action().accept(event.button());
+				zone.action().accept(button);
 				return true;
 			}
 		}
@@ -652,9 +675,20 @@ public class RequestBoardScreen extends Screen {
 		return true;
 	}
 
+	//? if >=1.21.9 {
 	@Override
 	public boolean keyPressed(KeyEvent event) {
-		if (event.key() == InputConstants.KEY_ESCAPE) {
+		return this.handleEscape(event.key()) || super.keyPressed(event);
+	}
+	//?} else {
+	/*@Override
+	public boolean keyPressed(int key, int scanCode, int modifiers) {
+		return this.handleEscape(key) || super.keyPressed(key, scanCode, modifiers);
+	}
+	*///?}
+
+	private boolean handleEscape(int key) {
+		if (key == InputConstants.KEY_ESCAPE) {
 			if (this.pickerOpen) {
 				this.pickerOpen = false;
 				this.rebuildWidgets();
@@ -665,7 +699,7 @@ public class RequestBoardScreen extends Screen {
 				return true;
 			}
 		}
-		return super.keyPressed(event);
+		return false;
 	}
 
 	private void playClick() {
@@ -674,6 +708,7 @@ public class RequestBoardScreen extends Screen {
 
 	// ------------------------------------------------------------------ rendering
 
+	//? if >=26.1 {
 	@Override
 	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
 		this.extractTransparentBackground(graphics);
@@ -681,6 +716,38 @@ public class RequestBoardScreen extends Screen {
 
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+		this.renderContent(new Gfx(graphics), mouseX, mouseY);
+		super.extractRenderState(graphics, mouseX, mouseY, a);
+	}
+	//?} elif >=1.21.6 {
+	/*@Override
+	public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float a) {
+		this.renderTransparentBackground(graphics);
+	}
+
+	@Override
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, float a) {
+		this.renderContent(new Gfx(graphics), mouseX, mouseY);
+		super.render(graphics, mouseX, mouseY, a);
+	}
+	*///?} else {
+	/*private @Nullable Gfx frame;
+
+	@Override
+	public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float a) {
+		this.renderTransparentBackground(graphics);
+		this.frame = new Gfx(graphics);
+		this.renderContent(this.frame, mouseX, mouseY);
+	}
+
+	@Override
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, float a) {
+		super.render(graphics, mouseX, mouseY, a);
+		if (this.frame != null) this.frame.flush();
+	}
+	*///?}
+
+	private void renderContent(Gfx g, int mouseX, int mouseY) {
 		this.zones.clear();
 		BoardRequest selected = this.selectedId == null ? null : ClientBoardState.find(this.selectedId);
 		boolean overlay = (selected != null && this.tab != Tab.CREATE) || (this.pickerOpen && this.tab == Tab.CREATE);
@@ -688,18 +755,16 @@ public class RequestBoardScreen extends Screen {
 		int my = overlay ? -1 : mouseY;
 
 		switch (this.tab) {
-			case BOARD -> this.renderBoard(graphics, mx, my, !overlay);
-			case CREATE -> this.renderCreate(graphics, mx, my, !overlay);
-			case MINE -> this.renderMine(graphics, mx, my, !overlay);
+			case BOARD -> this.renderBoard(g, mx, my, !overlay);
+			case CREATE -> this.renderCreate(g, mx, my, !overlay);
+			case MINE -> this.renderMine(g, mx, my, !overlay);
 		}
 
 		if (selected != null && this.tab != Tab.CREATE) {
-			this.renderDetail(graphics, selected, mouseX, mouseY);
+			this.renderDetail(g, selected, mouseX, mouseY);
 		} else if (this.pickerOpen && this.tab == Tab.CREATE) {
-			this.renderPicker(graphics, mouseX, mouseY);
+			this.renderPicker(g, mouseX, mouseY);
 		}
-
-		super.extractRenderState(graphics, mouseX, mouseY, a);
 	}
 
 	// ---- Board tab
@@ -715,7 +780,7 @@ public class RequestBoardScreen extends Screen {
 		return list;
 	}
 
-	private void renderBoard(GuiGraphicsExtractor g, int mouseX, int mouseY, boolean interactive) {
+	private void renderBoard(Gfx g, int mouseX, int mouseY, boolean interactive) {
 		this.drawBoardBackground(g);
 
 		int x0 = this.left + 10;
@@ -762,13 +827,12 @@ public class RequestBoardScreen extends Screen {
 		this.renderScrollbar(g, x1 + 2, y0, y1, scroll, maxScroll, contentH);
 	}
 
-	private void drawBoardBackground(GuiGraphicsExtractor g) {
+	private void drawBoardBackground(Gfx g) {
 		BoardStyle style = BoardStyle.current();
-		g.blit(RenderPipelines.GUI_TEXTURED, style.background, this.left, this.top, 0, 0, W, H,
-			style.textureWidth, style.textureHeight, style.textureWidth, style.textureHeight);
+		g.blit(style.background, this.left, this.top, W, H, style.textureWidth, style.textureHeight);
 	}
 
-	private void renderScrollbar(GuiGraphicsExtractor g, int x, int y0, int y1, int scroll, int maxScroll, int contentH) {
+	private void renderScrollbar(Gfx g, int x, int y0, int y1, int scroll, int maxScroll, int contentH) {
 		if (maxScroll <= 0) return;
 		int trackH = y1 - y0;
 		int thumbH = Math.max(12, trackH * trackH / contentH);
@@ -777,7 +841,7 @@ public class RequestBoardScreen extends Screen {
 		g.fill(x, thumbY, x + 3, thumbY + thumbH, 0xFFD8C08A);
 	}
 
-	private void renderCard(GuiGraphicsExtractor g, BoardRequest r, int x, int y, int w, int h, int mouseX, int mouseY) {
+	private void renderCard(Gfx g, BoardRequest r, int x, int y, int w, int h, int mouseX, int mouseY) {
 		boolean hovered = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
 		g.fill(x, y, x + w, y + h, hovered ? CARD_BG_HOVER : CARD_BG);
 		g.outline(x, y, w, h, hovered ? GOLD : CARD_BORDER);
@@ -832,7 +896,7 @@ public class RequestBoardScreen extends Screen {
 
 	// ---- My contracts tab
 
-	private void renderMine(GuiGraphicsExtractor g, int mouseX, int mouseY, boolean interactive) {
+	private void renderMine(Gfx g, int mouseX, int mouseY, boolean interactive) {
 		this.drawBoardBackground(g);
 		UUID me = this.myId();
 		List<BoardRequest> mine = new ArrayList<>();
@@ -878,7 +942,7 @@ public class RequestBoardScreen extends Screen {
 		this.renderScrollbar(g, x1 + 2, y0, y1, (int) this.mineScroll, maxScroll, contentH);
 	}
 
-	private int sectionHeader(GuiGraphicsExtractor g, Component text, int x, int y) {
+	private int sectionHeader(Gfx g, Component text, int x, int y) {
 		int w = this.font.width(text) + 10;
 		g.fill(x, y + 1, x + w, y + 13, 0xF0201610);
 		g.outline(x, y + 1, w, 12, CARD_BORDER);
@@ -886,13 +950,13 @@ public class RequestBoardScreen extends Screen {
 		return y + 16;
 	}
 
-	private int emptyRow(GuiGraphicsExtractor g, Component text, int x0, int x1, int y) {
+	private int emptyRow(Gfx g, Component text, int x0, int x1, int y) {
 		g.fill(x0, y, x1, y + ROW_H - 4, CARD_BG);
 		g.text(this.font, text, x0 + 8, y + 8, GRAY, true);
 		return y + ROW_H;
 	}
 
-	private void renderMineRow(GuiGraphicsExtractor g, BoardRequest r, boolean created, int x, int y, int w, int mouseX, int mouseY,
+	private void renderMineRow(Gfx g, BoardRequest r, boolean created, int x, int y, int w, int mouseX, int mouseY,
 			boolean interactive, int clipTop, int clipBottom) {
 		int h = ROW_H - 4;
 		g.fill(x, y, x + w, y + h, CARD_BG);
@@ -945,7 +1009,7 @@ public class RequestBoardScreen extends Screen {
 		return this.font.plainSubstrByWidth(text, width - this.font.width("…")) + "…";
 	}
 
-	private void miniConfirmButton(GuiGraphicsExtractor g, BoardRequest r, RBPayloads.Action action, String key, int x, int y, int color,
+	private void miniConfirmButton(Gfx g, BoardRequest r, RBPayloads.Action action, String key, int x, int y, int color,
 			int mouseX, int mouseY, boolean interactive) {
 		String confirmKey = action.name() + r.id();
 		boolean armed = confirmKey.equals(this.pendingConfirm) && System.currentTimeMillis() < this.pendingConfirmUntil;
@@ -961,7 +1025,7 @@ public class RequestBoardScreen extends Screen {
 		});
 	}
 
-	private void miniButton(GuiGraphicsExtractor g, Component label, int x, int y, int w, int h, int color, int mouseX, int mouseY,
+	private void miniButton(Gfx g, Component label, int x, int y, int w, int h, int color, int mouseX, int mouseY,
 			boolean interactive, IntConsumer action) {
 		boolean hovered = interactive && mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
 		g.fill(x, y, x + w, y + h, hovered ? 0xFF6A4A2C : 0xFF3E2A18);
@@ -975,11 +1039,11 @@ public class RequestBoardScreen extends Screen {
 
 	// ---- Detail overlay
 
-	private void renderDetail(GuiGraphicsExtractor g, BoardRequest r, int mouseX, int mouseY) {
+	private void renderDetail(Gfx g, BoardRequest r, int mouseX, int mouseY) {
 		g.fill(this.left, this.top, this.left + W, this.top + H, 0xA0000000);
 		int px = this.left + (W - PW) / 2;
 		int py = this.top + (H - PH) / 2;
-		g.blit(RenderPipelines.GUI_TEXTURED, PARCHMENT_TEX, px, py, 0, 0, PW, PH, PW, PH);
+		g.blit(PARCHMENT_TEX, px, py, PW, PH, PW, PH);
 
 		int x = px + 20;
 		int w = PW - 40;
@@ -1059,12 +1123,12 @@ public class RequestBoardScreen extends Screen {
 
 	// ---- Create tab
 
-	private void renderCreate(GuiGraphicsExtractor g, int mouseX, int mouseY, boolean interactive) {
+	private void renderCreate(Gfx g, int mouseX, int mouseY, boolean interactive) {
 		RBConfig cfg = cfg();
 		this.drawBoardBackground(g);
 		int px = this.left + 6;
 		int py = this.top + 6;
-		g.blit(RenderPipelines.GUI_TEXTURED, PARCHMENT_LARGE_TEX, px, py, 0, 0, LW, LH, LW, LH);
+		g.blit(PARCHMENT_LARGE_TEX, px, py, LW, LH, LW, LH);
 		if (!this.pickerOpen) this.drawFields(g);
 
 		Component header = this.waitingForServer
@@ -1200,11 +1264,11 @@ public class RequestBoardScreen extends Screen {
 
 	// ---- Item picker
 
-	private void renderPicker(GuiGraphicsExtractor g, int mouseX, int mouseY) {
+	private void renderPicker(Gfx g, int mouseX, int mouseY) {
 		g.fill(this.left, this.top, this.left + W, this.top + H, 0xA0000000);
 		int px = this.left + (W - PW) / 2;
 		int py = this.top + (H - PH) / 2;
-		g.blit(RenderPipelines.GUI_TEXTURED, PARCHMENT_TEX, px, py, 0, 0, PW, PH, PW, PH);
+		g.blit(PARCHMENT_TEX, px, py, PW, PH, PW, PH);
 		Component title = Component.translatable("requestboard.picker.title").withStyle(ChatFormatting.BOLD);
 		g.text(this.font, title, px + (PW - this.font.width(title)) / 2, py + 18, INK, false);
 		this.drawFields(g);
@@ -1244,16 +1308,19 @@ public class RequestBoardScreen extends Screen {
 		return this.minecraft.player == null ? new UUID(0, 0) : this.minecraft.player.getUUID();
 	}
 
-	private void head(GuiGraphicsExtractor g, UUID playerId, int x, int y, int size) {
+	private void head(Gfx g, UUID playerId, int x, int y, int size) {
 		PlayerInfo info = this.minecraft.getConnection() == null ? null : this.minecraft.getConnection().getPlayerInfo(playerId);
 		if (info != null) {
-			PlayerFaceExtractor.extractRenderState(g, info.getSkin(), x, y, size);
+			g.face(info.getSkin(), x, y, size);
 		} else {
-			PlayerFaceExtractor.extractRenderState(g, this.profiles.computeIfAbsent(playerId, ResolvableProfile::createUnresolved), x, y, size);
+			//? if >=26.1 {
+			PlayerFaceExtractor.extractRenderState(g.raw, this.profiles.computeIfAbsent(playerId, ResolvableProfile::createUnresolved), x, y, size);
+			//?} else
+			/*g.face(DefaultPlayerSkin.get(playerId), x, y, size);*/
 		}
 	}
 
-	private void objectiveIcon(GuiGraphicsExtractor g, ObjectiveEntry entry, int x, int y, int mouseX, int mouseY, int moreCount) {
+	private void objectiveIcon(Gfx g, ObjectiveEntry entry, int x, int y, int mouseX, int mouseY, int moreCount) {
 		ItemStack stack = entry.displayStack();
 		g.item(stack, x, y);
 		g.itemDecorations(this.font, stack, x, y, moreCount > 0 ? "+" + (moreCount + 1) : shortCount(entry.count()));
@@ -1265,7 +1332,7 @@ public class RequestBoardScreen extends Screen {
 		}
 	}
 
-	private void rewardIcon(GuiGraphicsExtractor g, ItemStack stack, int x, int y, int mouseX, int mouseY) {
+	private void rewardIcon(Gfx g, ItemStack stack, int x, int y, int mouseX, int mouseY) {
 		g.item(stack, x, y);
 		g.itemDecorations(this.font, stack, x, y);
 		if (mouseX >= x && mouseX < x + 16 && mouseY >= y && mouseY < y + 16) {

@@ -1,0 +1,39 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "request_board",
+  "key": {
+    "S": [
+      {
+        "item": "minecraft:mossy_cobblestone_slab"
+      },
+      {
+        "item": "minecraft:mossy_stone_brick_slab"
+      }
+    ],
+    "P": {
+      "item": "minecraft:birch_planks"
+    },
+    "B": {
+      "item": "minecraft:writable_book"
+    },
+    "F": {
+      "item": "minecraft:birch_fence"
+    }
+  },
+  "pattern": [
+    "SSS",
+    "PBP",
+    "F F"
+  ],
+  "result": {
+    "id": "requestboard:request_board",
+    "count": 1,
+    "components": {
+      "minecraft:block_state": {
+        "wood": "birch",
+        "roof": "mossy_cobblestone"
+      }
+    }
+  }
+}

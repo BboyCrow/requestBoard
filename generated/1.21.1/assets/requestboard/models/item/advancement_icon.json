@@ -1,0 +1,53 @@
+{
+  "parent": "requestboard:item/icon_first_request",
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 1
+      },
+      "model": "requestboard:item/icon_first_request"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 2
+      },
+      "model": "requestboard:item/icon_requests_10"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 3
+      },
+      "model": "requestboard:item/icon_requests_100"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 4
+      },
+      "model": "requestboard:item/icon_patron"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 5
+      },
+      "model": "requestboard:item/icon_accept_request"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 6
+      },
+      "model": "requestboard:item/icon_mission_accomplished"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 7
+      },
+      "model": "requestboard:item/icon_community_pillar"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 8
+      },
+      "model": "requestboard:item/icon_village_legend"
+    }
+  ]
+}

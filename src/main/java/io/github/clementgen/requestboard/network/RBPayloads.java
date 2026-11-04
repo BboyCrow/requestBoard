@@ -129,11 +129,18 @@ public final class RBPayloads {
 	}
 
 	public static void register() {
-		PayloadTypeRegistry.clientboundPlay().register(SyncConfig.TYPE, SyncConfig.CODEC);
-		PayloadTypeRegistry.clientboundPlay().register(SyncRequests.TYPE, SyncRequests.CODEC);
-		PayloadTypeRegistry.clientboundPlay().register(OpenBoard.TYPE, OpenBoard.CODEC);
-		PayloadTypeRegistry.clientboundPlay().register(CreateResult.TYPE, CreateResult.CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(CreateRequest.TYPE, CreateRequest.CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(RequestAction.TYPE, RequestAction.CODEC);
+		//? if >=26.1 {
+		var toClient = PayloadTypeRegistry.clientboundPlay();
+		var toServer = PayloadTypeRegistry.serverboundPlay();
+		//?} else {
+		/*var toClient = PayloadTypeRegistry.playS2C();
+		var toServer = PayloadTypeRegistry.playC2S();
+		*///?}
+		toClient.register(SyncConfig.TYPE, SyncConfig.CODEC);
+		toClient.register(SyncRequests.TYPE, SyncRequests.CODEC);
+		toClient.register(OpenBoard.TYPE, OpenBoard.CODEC);
+		toClient.register(CreateResult.TYPE, CreateResult.CODEC);
+		toServer.register(CreateRequest.TYPE, CreateRequest.CODEC);
+		toServer.register(RequestAction.TYPE, RequestAction.CODEC);
 	}
 }

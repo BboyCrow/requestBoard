@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "request_board",
+  "key": {
+    "S": [
+      "minecraft:sandstone_slab",
+      "minecraft:smooth_sandstone_slab",
+      "minecraft:cut_sandstone_slab"
+    ],
+    "P": "minecraft:acacia_planks",
+    "B": "minecraft:writable_book",
+    "F": "minecraft:acacia_fence"
+  },
+  "pattern": [
+    "SSS",
+    "PBP",
+    "F F"
+  ],
+  "result": {
+    "id": "requestboard:request_board",
+    "count": 1,
+    "components": {
+      "minecraft:block_state": {
+        "wood": "acacia",
+        "roof": "sandstone"
+      }
+    }
+  }
+}

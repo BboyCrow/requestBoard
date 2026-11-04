@@ -1,0 +1,39 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "request_board",
+  "key": {
+    "S": [
+      {
+        "item": "minecraft:deepslate_brick_slab"
+      },
+      {
+        "item": "minecraft:deepslate_tile_slab"
+      }
+    ],
+    "P": {
+      "item": "minecraft:cherry_planks"
+    },
+    "B": {
+      "item": "minecraft:writable_book"
+    },
+    "F": {
+      "item": "minecraft:cherry_fence"
+    }
+  },
+  "pattern": [
+    "SSS",
+    "PBP",
+    "F F"
+  ],
+  "result": {
+    "id": "requestboard:request_board",
+    "count": 1,
+    "components": {
+      "minecraft:block_state": {
+        "wood": "cherry",
+        "roof": "deepslate_bricks"
+      }
+    }
+  }
+}

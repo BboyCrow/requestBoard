@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "request_board",
+  "key": {
+    "S": [
+      "minecraft:granite_slab",
+      "minecraft:polished_granite_slab"
+    ],
+    "P": "minecraft:bamboo_planks",
+    "B": "minecraft:writable_book",
+    "F": "minecraft:bamboo_fence"
+  },
+  "pattern": [
+    "SSS",
+    "PBP",
+    "F F"
+  ],
+  "result": {
+    "id": "requestboard:request_board",
+    "count": 1,
+    "components": {
+      "minecraft:block_state": {
+        "wood": "bamboo",
+        "roof": "granite"
+      }
+    }
+  }
+}

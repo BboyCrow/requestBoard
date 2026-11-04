@@ -245,13 +245,51 @@ def model(textures, elements):
     return {"parent": "minecraft:block/block", "textures": textures, "elements": elements}
 
 
+# Woods that only exist in some Minecraft versions: their models live in generated/<version>/.
+LATE_WOODS = {"pale_oak"}
+
+
+def write_board_models(models, wood):
+    tex = wood_textures(wood)
+    for name, build in WOOD_PIECES.items():
+        write_json(models / f"board_{wood}_{name}.json", model(tex, build()))
+    item_parts = ["core", "rail", "post_left", "post_right", "brace_left", "brace_right"]
+    write_json(models / f"board_{wood}.json", model(tex, [e for p in item_parts for e in WOOD_PIECES[p]()] + notes(note_layouts()[0])))
+
+
+def generate_blockstate(out, woods):
+    layouts = note_layouts()
+    multipart = []
+    for facing, y in FACINGS.items():
+        multipart.append({"when": {"facing": facing}, "apply": [
+            {"model": f"{MOD}:block/notes_{i}", **({"y": y} if y else {})} for i in range(len(layouts))
+        ]})
+        for wood in woods:
+            for name, rule in WOOD_PIECE_RULES.items():
+                apply = {"model": f"{MOD}:block/board_{wood}_{name}"}
+                if y:
+                    apply["y"] = y
+                multipart.append({"when": {"facing": facing, "wood": wood, **rule}, "apply": apply})
+        for roof in ROOFS:
+            for name, rule in ROOF_PIECE_RULES.items():
+                apply = {"model": f"{MOD}:block/roof_{roof}_{name}"}
+                if y:
+                    apply["y"] = y
+                multipart.append({"when": {"facing": facing, "roof": roof, **rule}, "apply": apply})
+    write_json(out / "assets" / MOD / "blockstates" / "request_board.json", {"multipart": multipart})
+    for wood in woods:
+        if wood in LATE_WOODS:
+            write_board_models(out / "assets" / MOD / "models" / "block", wood)
+
+
 def generate_models():
     models = ASSETS / "models" / "block"
     if models.exists():
         for old in models.glob("*.json"):
             old.unlink()
+    clean(ASSETS / "blockstates")
     multipart = []
-    for wood in WOODS:
+    for wood in [w for w in WOODS if w not in LATE_WOODS]:
         tex = wood_textures(wood)
         for name, build in WOOD_PIECES.items():
             write_json(models / f"board_{wood}_{name}.json", model(tex, build()))
@@ -269,81 +307,153 @@ def generate_models():
     for i, layout in enumerate(layouts):
         write_json(models / f"notes_{i}.json", model({"particle": f"{MOD}:block/request_note_0", **note_textures()}, notes(layout)))
 
-    for facing, y in FACINGS.items():
-        multipart.append({"when": {"facing": facing}, "apply": [
-            {"model": f"{MOD}:block/notes_{i}", **({"y": y} if y else {})} for i in range(len(layouts))
-        ]})
-        for wood in WOODS:
-            for name, rule in WOOD_PIECE_RULES.items():
-                apply = {"model": f"{MOD}:block/board_{wood}_{name}"}
-                if y:
-                    apply["y"] = y
-                multipart.append({"when": {"facing": facing, "wood": wood, **rule}, "apply": apply})
-        for roof in ROOFS:
-            for name, rule in ROOF_PIECE_RULES.items():
-                apply = {"model": f"{MOD}:block/roof_{roof}_{name}"}
-                if y:
-                    apply["y"] = y
-                multipart.append({"when": {"facing": facing, "roof": roof, **rule}, "apply": apply})
-    write_json(ASSETS / "blockstates" / "request_board.json", {"multipart": multipart})
+    pass
+
+
+GENERATED = ROOT / "generated"
+
+# Minecraft versions built by Stonecutter, and the data formats each one reads.
+MC_VERSIONS = {
+    "1.21.1": {"ingredients": "objects", "loot": "functions", "item_models": "overrides", "missing_woods": ["pale_oak"],
+               "adv_background": "minecraft:textures/block/spruce_planks.png", "icon_data": "int"},
+    "1.21.11": {"ingredients": "ids", "loot": "functions", "item_models": "items",
+                "adv_background": "minecraft:block/spruce_planks", "icon_data": "strings"},
+    "26.3": {"ingredients": "ids", "loot": "modifiers", "item_models": "items",
+             "adv_background": "minecraft:block/spruce_planks", "icon_data": "strings"},
+}
+
+
+def clean(path):
+    import shutil
+    if path.exists():
+        shutil.rmtree(path)
 
 
 def generate_json():
     generate_models()
-    generate_advancements()
     generate_icon_models()
+    write_json(DATA / "minecraft" / "tags" / "block" / "mineable" / "axe.json", {"values": [f"{MOD}:request_board"]})
+    # Anything whose format depends on the Minecraft version lives in generated/<version>/.
+    for old in (DATA / MOD / "recipe", DATA / MOD / "loot_table", DATA / MOD / "advancement", ASSETS / "items"):
+        clean(old)
+    for mc, fmt in MC_VERSIONS.items():
+        out = GENERATED / mc
+        clean(out)
+        generate_blockstate(out, woods_for(fmt))
+        generate_recipes(out, fmt)
+        generate_loot_table(out, fmt)
+        generate_advancements(out, fmt)
+        generate_item_models(out, fmt)
 
 
-    def select(prop, prefix, values, default):
-        return {
-            "type": "minecraft:select",
-            "property": "minecraft:block_state",
-            "block_state_property": prop,
-            "cases": [{"when": v, "model": {"type": "minecraft:model", "model": f"{MOD}:block/{prefix}_{v}"}} for v in values if v != default],
-            "fallback": {"type": "minecraft:model", "model": f"{MOD}:block/{prefix}_{default}"},
-        }
+def woods_for(fmt):
+    return [w for w in WOODS if w not in fmt.get("missing_woods", [])]
 
-    write_json(ASSETS / "items" / "request_board.json", {"model": {
-        "type": "minecraft:composite",
-        "models": [select("wood", "board", WOODS, "oak"), select("roof", "roof", ROOFS, "stone")],
-    }})
 
-    recipes = DATA / MOD / "recipe"
-    for old in recipes.glob("*.json") if recipes.exists() else []:
-        old.unlink()
-    for wood, (planks, _, _) in WOODS.items():
+def ingredient(ids, fmt):
+    if fmt["ingredients"] == "objects":
+        objs = [{"item": i} for i in ids]
+        return objs if len(objs) > 1 else objs[0]
+    return ids if len(ids) > 1 else ids[0]
+
+
+def generate_recipes(out, fmt):
+    recipes = out / "data" / MOD / "recipe"
+    for wood in woods_for(fmt):
+        planks = WOODS[wood][0]
         for roof, (_, slabs) in ROOFS.items():
             write_json(recipes / f"request_board_{wood}_{roof}.json", {
                 "type": "minecraft:crafting_shaped",
                 "category": "misc",
                 "group": "request_board",
                 "key": {
-                    "S": [f"minecraft:{s}" for s in slabs] if len(slabs) > 1 else f"minecraft:{slabs[0]}",
-                    "P": f"minecraft:{planks}",
-                    "B": "minecraft:writable_book",
-                    "F": f"minecraft:{wood}_fence",
+                    "S": ingredient([f"minecraft:{s}" for s in slabs], fmt),
+                    "P": ingredient([f"minecraft:{planks}"], fmt),
+                    "B": ingredient(["minecraft:writable_book"], fmt),
+                    "F": ingredient([f"minecraft:{wood}_fence"], fmt),
                 },
                 "pattern": ["SSS", "PBP", "F F"],
                 "result": {
                     "id": f"{MOD}:request_board",
+                    "count": 1,
                     "components": {"minecraft:block_state": {"wood": wood, "roof": roof}},
                 },
             })
 
-    write_json(DATA / MOD / "loot_table" / "blocks" / "request_board.json", {
-        "type": "minecraft:block",
-        "pools": [{
+
+def generate_loot_table(out, fmt):
+    copy = {"block": f"{MOD}:request_board", "properties": ["wood", "roof"]}
+    if fmt["loot"] == "modifiers":
+        pool = {
             "condition": {"type": "minecraft:survives_explosion"},
-            "entries": [{
-                "type": "minecraft:item",
-                "name": f"{MOD}:request_board",
-                "modifier": [{"type": "minecraft:copy_state", "block": f"{MOD}:request_board", "properties": ["wood", "roof"]}],
-            }],
+            "entries": [{"type": "minecraft:item", "name": f"{MOD}:request_board",
+                         "modifier": [{"type": "minecraft:copy_state", **copy}]}],
             "rolls": 1,
-        }],
+        }
+    else:
+        pool = {
+            "bonus_rolls": 0.0,
+            "conditions": [{"condition": "minecraft:survives_explosion"}],
+            "entries": [{"type": "minecraft:item", "name": f"{MOD}:request_board",
+                         "functions": [{"function": "minecraft:copy_state", **copy}]}],
+            "rolls": 1.0,
+        }
+    write_json(out / "data" / MOD / "loot_table" / "blocks" / "request_board.json", {
+        "type": "minecraft:block",
+        "pools": [pool],
         "random_sequence": f"{MOD}:blocks/request_board",
     })
-    write_json(DATA / "minecraft" / "tags" / "block" / "mineable" / "axe.json", {"values": [f"{MOD}:request_board"]})
+
+
+def board_variant_index(woods, wood, roof):
+    """Index used by the 1.21.1 item model override (see RequestBoardClient): wood ordinal * roofs + roof ordinal."""
+    return woods.index(wood) * len(ROOFS) + list(ROOFS).index(roof)
+
+
+def generate_item_models(out, fmt):
+    assets = out / "assets" / MOD
+    icon_names = list(ICONS)
+    if fmt["item_models"] == "items":
+        def select(prop, prefix, values, default):
+            return {
+                "type": "minecraft:select",
+                "property": "minecraft:block_state",
+                "block_state_property": prop,
+                "cases": [{"when": v, "model": {"type": "minecraft:model", "model": f"{MOD}:block/{prefix}_{v}"}} for v in values if v != default],
+                "fallback": {"type": "minecraft:model", "model": f"{MOD}:block/{prefix}_{default}"},
+            }
+        write_json(assets / "items" / "request_board.json", {"model": {
+            "type": "minecraft:composite",
+            "models": [select("wood", "board", woods_for(fmt), "oak"), select("roof", "roof", ROOFS, "stone")],
+        }})
+        write_json(assets / "items" / "advancement_icon.json", {"model": {
+            "type": "minecraft:select",
+            "property": "minecraft:custom_model_data",
+            "cases": [{"when": n, "model": {"type": "minecraft:model", "model": f"{MOD}:item/icon_{n}"}} for n in icon_names],
+            "fallback": {"type": "minecraft:model", "model": f"{MOD}:item/icon_{icon_names[0]}"},
+        }})
+        return
+
+    # 1.21.1: one combined model per wood/roof pair, picked by an item property override.
+    overrides = []
+    woods = woods_for(fmt)
+    for wood in woods:
+        board_elements = [e for p in ["core", "rail", "post_left", "post_right", "brace_left", "brace_right"] for e in WOOD_PIECES[p]()]
+        board_elements += notes(note_layouts()[0])
+        for roof in ROOFS:
+            tex_name, _ = ROOFS[roof]
+            textures = {**wood_textures(wood), "stone": f"minecraft:block/{tex_name}"}
+            roof_elements = [e for p in ROOF_PIECES.values() for e in p()]
+            write_json(assets / "models" / "item" / f"request_board_{wood}_{roof}.json",
+                       model(textures, board_elements + roof_elements))
+            overrides.append({"predicate": {f"{MOD}:variant": board_variant_index(woods, wood, roof) / 1000.0},
+                              "model": f"{MOD}:item/request_board_{wood}_{roof}"})
+    write_json(assets / "models" / "item" / "request_board.json",
+               {"parent": f"{MOD}:item/request_board_oak_stone", "overrides": overrides})
+    write_json(assets / "models" / "item" / "advancement_icon.json", {
+        "parent": f"{MOD}:item/icon_{icon_names[0]}",
+        "overrides": [{"predicate": {"custom_model_data": i + 1}, "model": f"{MOD}:item/icon_{n}"} for i, n in enumerate(icon_names)],
+    })
 
 
 # ---------------------------------------------------------------- advancements
@@ -362,17 +472,15 @@ ADVANCEMENTS = {
 }
 
 
-def generate_advancements():
-    folder = DATA / MOD / "advancement"
-    if folder.exists():
-        for old in folder.glob("*.json"):
-            old.unlink()
+def generate_advancements(out, fmt):
+    folder = out / "data" / MOD / "advancement"
+    icon_names = list(ICONS)
     for name, (parent, icon, frame, hidden) in ADVANCEMENTS.items():
-        icon_obj = {"id": icon}
         if icon == "icon":
-            icon_obj = {"id": f"{MOD}:advancement_icon", "components": {"minecraft:custom_model_data": {"strings": [name]}}}
-        elif icon == f"{MOD}:request_board":
-            icon_obj["components"] = {"minecraft:block_state": {"wood": "oak", "roof": "stone"}}
+            data = icon_names.index(name) + 1 if fmt["icon_data"] == "int" else {"strings": [name]}
+            icon_obj = {"id": f"{MOD}:advancement_icon", "count": 1, "components": {"minecraft:custom_model_data": data}}
+        else:
+            icon_obj = {"id": icon, "count": 1, "components": {"minecraft:block_state": {"wood": "oak", "roof": "stone"}}}
         display = {
             "icon": icon_obj,
             "title": {"translate": f"advancements.{MOD}.{name}.title"},
@@ -383,7 +491,7 @@ def generate_advancements():
             "hidden": hidden,
         }
         if parent is None:
-            display["background"] = "minecraft:block/spruce_planks"
+            display["background"] = fmt["adv_background"]
             display["show_toast"] = False
             display["announce_to_chat"] = False
             criteria = {"done": {"trigger": "minecraft:inventory_changed",
@@ -1197,17 +1305,10 @@ def generate_icon_textures(tex):
 
 
 def generate_icon_models():
-    """One hidden item whose look depends on custom_model_data, so the icons don't clutter item lists."""
+    """Per-icon models (shared). The item definition that picks one lives in generated/<version>/."""
     for name in ICONS:
         write_json(ASSETS / "models" / "item" / f"icon_{name}.json",
                    {"parent": "minecraft:item/generated", "textures": {"layer0": f"{MOD}:item/icons/{name}"}})
-    names = list(ICONS)
-    write_json(ASSETS / "items" / "advancement_icon.json", {"model": {
-        "type": "minecraft:select",
-        "property": "minecraft:custom_model_data",
-        "cases": [{"when": n, "model": {"type": "minecraft:model", "model": f"{MOD}:item/icon_{n}"}} for n in names],
-        "fallback": {"type": "minecraft:model", "model": f"{MOD}:item/icon_{names[0]}"},
-    }})
 
 
 if __name__ == "__main__":

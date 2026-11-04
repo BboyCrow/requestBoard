@@ -1,5 +1,6 @@
 package io.github.clementgen.requestboard.server;
 
+import io.github.clementgen.requestboard.Compat;
 import io.github.clementgen.requestboard.config.RBConfig;
 import io.github.clementgen.requestboard.data.Acceptor;
 import io.github.clementgen.requestboard.data.BoardRequest;
@@ -21,16 +22,14 @@ import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.permissions.Permissions;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Prediction;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 /** Server-side rules of the board: every change goes through here. */
 public final class RequestManager {
@@ -41,7 +40,7 @@ public final class RequestManager {
 	}
 
 	public static RequestStorage storage(MinecraftServer server) {
-		return server.getDataStorage().computeIfAbsent(RequestStorage.TYPE);
+		return Compat.storage(server);
 	}
 
 	private static RBConfig config() {
@@ -55,7 +54,7 @@ public final class RequestManager {
 	}
 
 	public static void sendRequests(ServerPlayer player) {
-		List<BoardRequest> list = new ArrayList<>(storage(player.level().getServer()).requests());
+		List<BoardRequest> list = new ArrayList<>(storage(Compat.server(player)).requests());
 		ServerPlayNetworking.send(player, new RBPayloads.SyncRequests(list, System.currentTimeMillis()));
 	}
 
@@ -92,8 +91,8 @@ public final class RequestManager {
 			sendConfig(player);
 			sendRequests(player);
 		}
-		BoardAdvancements.sync(player, storage(player.level().getServer()).stats(player.getUUID()));
-		List<ItemStack> pending = storage(player.level().getServer()).takePending(player.getUUID());
+		BoardAdvancements.sync(player, storage(Compat.server(player)).stats(player.getUUID()));
+		List<ItemStack> pending = storage(Compat.server(player)).takePending(player.getUUID());
 		if (!pending.isEmpty()) {
 			int total = 0;
 			for (ItemStack stack : pending) {
@@ -115,7 +114,7 @@ public final class RequestManager {
 
 	private static @Nullable Component tryCreate(ServerPlayer player, RBPayloads.CreateRequest packet) {
 		RBConfig cfg = config();
-		MinecraftServer server = player.level().getServer();
+		MinecraftServer server = Compat.server(player);
 		RequestStorage storage = storage(server);
 
 		Category category = packet.category();
@@ -213,7 +212,7 @@ public final class RequestManager {
 		}
 
 		BoardRequest request = new BoardRequest(
-			UUID.randomUUID(), player.getUUID(), player.getPlainTextName(), category, title, details,
+			UUID.randomUUID(), player.getUUID(), Compat.name(player), category, title, details,
 			objectives, rewards, withdraw && !rewards.isEmpty(), now, expiresAt, List.of()
 		);
 		storage.add(request);
@@ -222,7 +221,7 @@ public final class RequestManager {
 		ServerPlayNetworking.send(player, new RBPayloads.CreateResult(true, Component.translatable("requestboard.msg.created", title)));
 		playSound(player, SoundEvents.BOOK_PUT);
 		if (cfg.broadcastNewRequests) {
-			Component announce = Component.translatable("requestboard.msg.broadcast_new", player.getPlainTextName(),
+			Component announce = Component.translatable("requestboard.msg.broadcast_new", Compat.name(player),
 				Component.translatable(category.translationKey()), title).withStyle(ChatFormatting.GOLD);
 			for (ServerPlayer other : server.getPlayerList().getPlayers()) {
 				if (other != player) {
@@ -241,7 +240,7 @@ public final class RequestManager {
 	// ---- Actions ----
 
 	public static void handleAction(ServerPlayer player, UUID requestId, RBPayloads.Action action) {
-		MinecraftServer server = player.level().getServer();
+		MinecraftServer server = Compat.server(player);
 		RequestStorage storage = storage(server);
 		BoardRequest request = storage.get(requestId);
 		if (request == null) {
@@ -273,15 +272,15 @@ public final class RequestManager {
 			error(player, "requestboard.error.full");
 			return;
 		}
-		request.addAcceptor(new Acceptor(player.getUUID(), player.getPlainTextName(), System.currentTimeMillis()));
+		request.addAcceptor(new Acceptor(player.getUUID(), Compat.name(player), System.currentTimeMillis()));
 		storage.setDirty();
 		if (!own) {
 			BoardAdvancements.grant(player, BoardAdvancements.ACCEPT_REQUEST);
 		}
 		player.sendSystemMessage(Component.translatable("requestboard.msg.accepted", request.title()).withStyle(ChatFormatting.GREEN));
 		playSound(player, SoundEvents.VILLAGER_WORK_CARTOGRAPHER);
-		notify(player.level().getServer(), request.creator(),
-			Component.translatable("requestboard.msg.creator_accepted", player.getPlainTextName(), request.title()).withStyle(ChatFormatting.GREEN));
+		notify(Compat.server(player), request.creator(),
+			Component.translatable("requestboard.msg.creator_accepted", Compat.name(player), request.title()).withStyle(ChatFormatting.GREEN));
 	}
 
 	private static void leave(ServerPlayer player, BoardRequest request, RequestStorage storage) {
@@ -291,8 +290,8 @@ public final class RequestManager {
 		}
 		storage.setDirty();
 		player.sendSystemMessage(Component.translatable("requestboard.msg.left", request.title()).withStyle(ChatFormatting.YELLOW));
-		notify(player.level().getServer(), request.creator(),
-			Component.translatable("requestboard.msg.creator_left", player.getPlainTextName(), request.title()).withStyle(ChatFormatting.YELLOW));
+		notify(Compat.server(player), request.creator(),
+			Component.translatable("requestboard.msg.creator_left", Compat.name(player), request.title()).withStyle(ChatFormatting.YELLOW));
 	}
 
 	private static void close(ServerPlayer player, BoardRequest request, RequestStorage storage) {
@@ -300,7 +299,7 @@ public final class RequestManager {
 			error(player, "requestboard.error.not_creator");
 			return;
 		}
-		MinecraftServer server = player.level().getServer();
+		MinecraftServer server = Compat.server(player);
 		storage.remove(request.id());
 		Set<UUID> rewarded = dispatchRewards(server, request, storage);
 		boolean dispatched = !rewarded.isEmpty();
@@ -323,12 +322,12 @@ public final class RequestManager {
 
 	private static void delete(ServerPlayer player, BoardRequest request, RequestStorage storage) {
 		boolean isCreator = request.creator().equals(player.getUUID());
-		boolean isOp = config().operatorsCanRemoveAny && player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER);
+		boolean isOp = config().operatorsCanRemoveAny && Compat.isOperator(player);
 		if (!isCreator && !isOp) {
 			error(player, "requestboard.error.not_creator");
 			return;
 		}
-		MinecraftServer server = player.level().getServer();
+		MinecraftServer server = Compat.server(player);
 		storage.remove(request.id());
 		returnRewards(server, request, storage);
 		player.sendSystemMessage(Component.translatable("requestboard.msg.deleted", request.title()).withStyle(ChatFormatting.YELLOW));
@@ -463,7 +462,7 @@ public final class RequestManager {
 	}
 
 	private static void give(ServerPlayer player, ItemStack stack) {
-		player.getInventory().placeItemBackInInventory(stack, Prediction.SERVER_ONLY);
+		Compat.give(player, stack);
 	}
 
 	// ---- Messages ----

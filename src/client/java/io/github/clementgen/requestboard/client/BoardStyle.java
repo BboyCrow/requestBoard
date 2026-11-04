@@ -11,7 +11,7 @@ import java.nio.file.Path;
 import java.util.Locale;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resources.Identifier;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 /** Look of the board screen. Each player picks one; the server config gives the default. */
 public enum BoardStyle {

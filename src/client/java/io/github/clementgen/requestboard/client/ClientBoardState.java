@@ -3,7 +3,7 @@ package io.github.clementgen.requestboard.client;
 import io.github.clementgen.requestboard.data.BoardRequest;
 import java.util.List;
 import java.util.UUID;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 /** Last board state received from the server. */
 public final class ClientBoardState {

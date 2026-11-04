@@ -1,0 +1,1061 @@
+{
+  "parent": "requestboard:item/request_board_oak_stone",
+  "overrides": [
+    {
+      "predicate": {
+        "requestboard:variant": 0.0
+      },
+      "model": "requestboard:item/request_board_oak_stone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.001
+      },
+      "model": "requestboard:item/request_board_oak_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.002
+      },
+      "model": "requestboard:item/request_board_oak_mossy_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.003
+      },
+      "model": "requestboard:item/request_board_oak_stone_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.004
+      },
+      "model": "requestboard:item/request_board_oak_cobbled_deepslate"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.005
+      },
+      "model": "requestboard:item/request_board_oak_deepslate_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.006
+      },
+      "model": "requestboard:item/request_board_oak_blackstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.007
+      },
+      "model": "requestboard:item/request_board_oak_andesite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.008
+      },
+      "model": "requestboard:item/request_board_oak_granite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.009
+      },
+      "model": "requestboard:item/request_board_oak_diorite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.01
+      },
+      "model": "requestboard:item/request_board_oak_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.011
+      },
+      "model": "requestboard:item/request_board_oak_red_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.012
+      },
+      "model": "requestboard:item/request_board_oak_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.013
+      },
+      "model": "requestboard:item/request_board_oak_mud_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.014
+      },
+      "model": "requestboard:item/request_board_oak_tuff"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.015
+      },
+      "model": "requestboard:item/request_board_oak_nether_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.016
+      },
+      "model": "requestboard:item/request_board_spruce_stone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.017
+      },
+      "model": "requestboard:item/request_board_spruce_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.018
+      },
+      "model": "requestboard:item/request_board_spruce_mossy_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.019
+      },
+      "model": "requestboard:item/request_board_spruce_stone_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.02
+      },
+      "model": "requestboard:item/request_board_spruce_cobbled_deepslate"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.021
+      },
+      "model": "requestboard:item/request_board_spruce_deepslate_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.022
+      },
+      "model": "requestboard:item/request_board_spruce_blackstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.023
+      },
+      "model": "requestboard:item/request_board_spruce_andesite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.024
+      },
+      "model": "requestboard:item/request_board_spruce_granite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.025
+      },
+      "model": "requestboard:item/request_board_spruce_diorite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.026
+      },
+      "model": "requestboard:item/request_board_spruce_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.027
+      },
+      "model": "requestboard:item/request_board_spruce_red_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.028
+      },
+      "model": "requestboard:item/request_board_spruce_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.029
+      },
+      "model": "requestboard:item/request_board_spruce_mud_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.03
+      },
+      "model": "requestboard:item/request_board_spruce_tuff"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.031
+      },
+      "model": "requestboard:item/request_board_spruce_nether_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.032
+      },
+      "model": "requestboard:item/request_board_birch_stone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.033
+      },
+      "model": "requestboard:item/request_board_birch_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.034
+      },
+      "model": "requestboard:item/request_board_birch_mossy_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.035
+      },
+      "model": "requestboard:item/request_board_birch_stone_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.036
+      },
+      "model": "requestboard:item/request_board_birch_cobbled_deepslate"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.037
+      },
+      "model": "requestboard:item/request_board_birch_deepslate_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.038
+      },
+      "model": "requestboard:item/request_board_birch_blackstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.039
+      },
+      "model": "requestboard:item/request_board_birch_andesite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.04
+      },
+      "model": "requestboard:item/request_board_birch_granite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.041
+      },
+      "model": "requestboard:item/request_board_birch_diorite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.042
+      },
+      "model": "requestboard:item/request_board_birch_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.043
+      },
+      "model": "requestboard:item/request_board_birch_red_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.044
+      },
+      "model": "requestboard:item/request_board_birch_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.045
+      },
+      "model": "requestboard:item/request_board_birch_mud_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.046
+      },
+      "model": "requestboard:item/request_board_birch_tuff"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.047
+      },
+      "model": "requestboard:item/request_board_birch_nether_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.048
+      },
+      "model": "requestboard:item/request_board_jungle_stone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.049
+      },
+      "model": "requestboard:item/request_board_jungle_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.05
+      },
+      "model": "requestboard:item/request_board_jungle_mossy_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.051
+      },
+      "model": "requestboard:item/request_board_jungle_stone_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.052
+      },
+      "model": "requestboard:item/request_board_jungle_cobbled_deepslate"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.053
+      },
+      "model": "requestboard:item/request_board_jungle_deepslate_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.054
+      },
+      "model": "requestboard:item/request_board_jungle_blackstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.055
+      },
+      "model": "requestboard:item/request_board_jungle_andesite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.056
+      },
+      "model": "requestboard:item/request_board_jungle_granite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.057
+      },
+      "model": "requestboard:item/request_board_jungle_diorite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.058
+      },
+      "model": "requestboard:item/request_board_jungle_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.059
+      },
+      "model": "requestboard:item/request_board_jungle_red_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.06
+      },
+      "model": "requestboard:item/request_board_jungle_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.061
+      },
+      "model": "requestboard:item/request_board_jungle_mud_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.062
+      },
+      "model": "requestboard:item/request_board_jungle_tuff"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.063
+      },
+      "model": "requestboard:item/request_board_jungle_nether_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.064
+      },
+      "model": "requestboard:item/request_board_acacia_stone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.065
+      },
+      "model": "requestboard:item/request_board_acacia_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.066
+      },
+      "model": "requestboard:item/request_board_acacia_mossy_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.067
+      },
+      "model": "requestboard:item/request_board_acacia_stone_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.068
+      },
+      "model": "requestboard:item/request_board_acacia_cobbled_deepslate"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.069
+      },
+      "model": "requestboard:item/request_board_acacia_deepslate_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.07
+      },
+      "model": "requestboard:item/request_board_acacia_blackstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.071
+      },
+      "model": "requestboard:item/request_board_acacia_andesite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.072
+      },
+      "model": "requestboard:item/request_board_acacia_granite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.073
+      },
+      "model": "requestboard:item/request_board_acacia_diorite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.074
+      },
+      "model": "requestboard:item/request_board_acacia_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.075
+      },
+      "model": "requestboard:item/request_board_acacia_red_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.076
+      },
+      "model": "requestboard:item/request_board_acacia_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.077
+      },
+      "model": "requestboard:item/request_board_acacia_mud_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.078
+      },
+      "model": "requestboard:item/request_board_acacia_tuff"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.079
+      },
+      "model": "requestboard:item/request_board_acacia_nether_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.08
+      },
+      "model": "requestboard:item/request_board_dark_oak_stone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.081
+      },
+      "model": "requestboard:item/request_board_dark_oak_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.082
+      },
+      "model": "requestboard:item/request_board_dark_oak_mossy_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.083
+      },
+      "model": "requestboard:item/request_board_dark_oak_stone_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.084
+      },
+      "model": "requestboard:item/request_board_dark_oak_cobbled_deepslate"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.085
+      },
+      "model": "requestboard:item/request_board_dark_oak_deepslate_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.086
+      },
+      "model": "requestboard:item/request_board_dark_oak_blackstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.087
+      },
+      "model": "requestboard:item/request_board_dark_oak_andesite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.088
+      },
+      "model": "requestboard:item/request_board_dark_oak_granite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.089
+      },
+      "model": "requestboard:item/request_board_dark_oak_diorite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.09
+      },
+      "model": "requestboard:item/request_board_dark_oak_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.091
+      },
+      "model": "requestboard:item/request_board_dark_oak_red_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.092
+      },
+      "model": "requestboard:item/request_board_dark_oak_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.093
+      },
+      "model": "requestboard:item/request_board_dark_oak_mud_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.094
+      },
+      "model": "requestboard:item/request_board_dark_oak_tuff"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.095
+      },
+      "model": "requestboard:item/request_board_dark_oak_nether_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.096
+      },
+      "model": "requestboard:item/request_board_mangrove_stone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.097
+      },
+      "model": "requestboard:item/request_board_mangrove_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.098
+      },
+      "model": "requestboard:item/request_board_mangrove_mossy_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.099
+      },
+      "model": "requestboard:item/request_board_mangrove_stone_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.1
+      },
+      "model": "requestboard:item/request_board_mangrove_cobbled_deepslate"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.101
+      },
+      "model": "requestboard:item/request_board_mangrove_deepslate_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.102
+      },
+      "model": "requestboard:item/request_board_mangrove_blackstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.103
+      },
+      "model": "requestboard:item/request_board_mangrove_andesite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.104
+      },
+      "model": "requestboard:item/request_board_mangrove_granite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.105
+      },
+      "model": "requestboard:item/request_board_mangrove_diorite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.106
+      },
+      "model": "requestboard:item/request_board_mangrove_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.107
+      },
+      "model": "requestboard:item/request_board_mangrove_red_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.108
+      },
+      "model": "requestboard:item/request_board_mangrove_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.109
+      },
+      "model": "requestboard:item/request_board_mangrove_mud_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.11
+      },
+      "model": "requestboard:item/request_board_mangrove_tuff"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.111
+      },
+      "model": "requestboard:item/request_board_mangrove_nether_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.112
+      },
+      "model": "requestboard:item/request_board_cherry_stone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.113
+      },
+      "model": "requestboard:item/request_board_cherry_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.114
+      },
+      "model": "requestboard:item/request_board_cherry_mossy_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.115
+      },
+      "model": "requestboard:item/request_board_cherry_stone_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.116
+      },
+      "model": "requestboard:item/request_board_cherry_cobbled_deepslate"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.117
+      },
+      "model": "requestboard:item/request_board_cherry_deepslate_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.118
+      },
+      "model": "requestboard:item/request_board_cherry_blackstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.119
+      },
+      "model": "requestboard:item/request_board_cherry_andesite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.12
+      },
+      "model": "requestboard:item/request_board_cherry_granite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.121
+      },
+      "model": "requestboard:item/request_board_cherry_diorite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.122
+      },
+      "model": "requestboard:item/request_board_cherry_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.123
+      },
+      "model": "requestboard:item/request_board_cherry_red_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.124
+      },
+      "model": "requestboard:item/request_board_cherry_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.125
+      },
+      "model": "requestboard:item/request_board_cherry_mud_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.126
+      },
+      "model": "requestboard:item/request_board_cherry_tuff"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.127
+      },
+      "model": "requestboard:item/request_board_cherry_nether_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.128
+      },
+      "model": "requestboard:item/request_board_crimson_stone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.129
+      },
+      "model": "requestboard:item/request_board_crimson_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.13
+      },
+      "model": "requestboard:item/request_board_crimson_mossy_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.131
+      },
+      "model": "requestboard:item/request_board_crimson_stone_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.132
+      },
+      "model": "requestboard:item/request_board_crimson_cobbled_deepslate"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.133
+      },
+      "model": "requestboard:item/request_board_crimson_deepslate_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.134
+      },
+      "model": "requestboard:item/request_board_crimson_blackstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.135
+      },
+      "model": "requestboard:item/request_board_crimson_andesite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.136
+      },
+      "model": "requestboard:item/request_board_crimson_granite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.137
+      },
+      "model": "requestboard:item/request_board_crimson_diorite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.138
+      },
+      "model": "requestboard:item/request_board_crimson_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.139
+      },
+      "model": "requestboard:item/request_board_crimson_red_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.14
+      },
+      "model": "requestboard:item/request_board_crimson_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.141
+      },
+      "model": "requestboard:item/request_board_crimson_mud_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.142
+      },
+      "model": "requestboard:item/request_board_crimson_tuff"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.143
+      },
+      "model": "requestboard:item/request_board_crimson_nether_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.144
+      },
+      "model": "requestboard:item/request_board_warped_stone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.145
+      },
+      "model": "requestboard:item/request_board_warped_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.146
+      },
+      "model": "requestboard:item/request_board_warped_mossy_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.147
+      },
+      "model": "requestboard:item/request_board_warped_stone_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.148
+      },
+      "model": "requestboard:item/request_board_warped_cobbled_deepslate"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.149
+      },
+      "model": "requestboard:item/request_board_warped_deepslate_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.15
+      },
+      "model": "requestboard:item/request_board_warped_blackstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.151
+      },
+      "model": "requestboard:item/request_board_warped_andesite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.152
+      },
+      "model": "requestboard:item/request_board_warped_granite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.153
+      },
+      "model": "requestboard:item/request_board_warped_diorite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.154
+      },
+      "model": "requestboard:item/request_board_warped_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.155
+      },
+      "model": "requestboard:item/request_board_warped_red_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.156
+      },
+      "model": "requestboard:item/request_board_warped_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.157
+      },
+      "model": "requestboard:item/request_board_warped_mud_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.158
+      },
+      "model": "requestboard:item/request_board_warped_tuff"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.159
+      },
+      "model": "requestboard:item/request_board_warped_nether_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.16
+      },
+      "model": "requestboard:item/request_board_bamboo_stone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.161
+      },
+      "model": "requestboard:item/request_board_bamboo_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.162
+      },
+      "model": "requestboard:item/request_board_bamboo_mossy_cobblestone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.163
+      },
+      "model": "requestboard:item/request_board_bamboo_stone_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.164
+      },
+      "model": "requestboard:item/request_board_bamboo_cobbled_deepslate"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.165
+      },
+      "model": "requestboard:item/request_board_bamboo_deepslate_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.166
+      },
+      "model": "requestboard:item/request_board_bamboo_blackstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.167
+      },
+      "model": "requestboard:item/request_board_bamboo_andesite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.168
+      },
+      "model": "requestboard:item/request_board_bamboo_granite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.169
+      },
+      "model": "requestboard:item/request_board_bamboo_diorite"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.17
+      },
+      "model": "requestboard:item/request_board_bamboo_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.171
+      },
+      "model": "requestboard:item/request_board_bamboo_red_sandstone"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.172
+      },
+      "model": "requestboard:item/request_board_bamboo_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.173
+      },
+      "model": "requestboard:item/request_board_bamboo_mud_bricks"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.174
+      },
+      "model": "requestboard:item/request_board_bamboo_tuff"
+    },
+    {
+      "predicate": {
+        "requestboard:variant": 0.175
+      },
+      "model": "requestboard:item/request_board_bamboo_nether_bricks"
+    }
+  ]
+}

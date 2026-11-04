@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "request_board",
+  "key": {
+    "S": [
+      "minecraft:blackstone_slab",
+      "minecraft:polished_blackstone_slab",
+      "minecraft:polished_blackstone_brick_slab"
+    ],
+    "P": "minecraft:dark_oak_planks",
+    "B": "minecraft:writable_book",
+    "F": "minecraft:dark_oak_fence"
+  },
+  "pattern": [
+    "SSS",
+    "PBP",
+    "F F"
+  ],
+  "result": {
+    "id": "requestboard:request_board",
+    "count": 1,
+    "components": {
+      "minecraft:block_state": {
+        "wood": "dark_oak",
+        "roof": "blackstone"
+      }
+    }
+  }
+}

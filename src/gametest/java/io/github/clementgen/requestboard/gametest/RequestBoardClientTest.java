@@ -16,7 +16,10 @@ import io.github.clementgen.requestboard.network.RBPayloads;
 import io.github.clementgen.requestboard.server.RequestManager;
 import java.util.List;
 import java.util.UUID;
+//? if >=26.1 {
 import net.fabricmc.fabric.api.client.creativetab.v1.FabricCreativeModeInventoryScreen;
+//?} else
+/*import net.fabricmc.fabric.api.client.itemgroup.v1.FabricCreativeInventoryScreen;*/
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
@@ -56,10 +59,16 @@ public class RequestBoardClientTest implements FabricClientGameTest {
 		ctx.waitTicks(10);
 
 		try (TestSingleplayerContext sp = ctx.worldBuilder().create()) {
+			//? if >=26.1 {
 			sp.getConnection().waitForChunksRender();
+			//?} else
+			/*sp.getClientWorld().waitForChunksRender();*/
 			ctx.runOnClient(mc -> {
 				mc.options.guiScale().set(2);
+				//? if >=26.1 {
 				mc.resizeGui();
+				//?} else
+				/*mc.resizeDisplay();*/
 				BoardStyle.choose(BoardStyle.MODERN);
 			});
 			TestServerContext server = sp.getServer();
@@ -97,7 +106,10 @@ public class RequestBoardClientTest implements FabricClientGameTest {
 			// ---- Creative tab with every variant
 			ctx.getInput().pressKey(options -> options.keyInventory);
 			ctx.waitForScreen(CreativeModeInventoryScreen.class);
+			//? if >=26.1 {
 			ctx.runOnClient(mc -> ((FabricCreativeModeInventoryScreen) mc.gui.screen()).setSelectedTab(RequestBoard.TAB));
+			//?} else
+			/*ctx.runOnClient(mc -> ((FabricCreativeInventoryScreen) mc.screen).setSelectedItemGroup(RequestBoard.TAB));*/
 			ctx.waitTicks(10);
 			ctx.takeScreenshot("03_onglet_creatif");
 			ctx.getInput().pressKey(InputConstants.KEY_ESCAPE);
@@ -247,7 +259,10 @@ public class RequestBoardClientTest implements FabricClientGameTest {
 			ctx.runOnClient(mc -> {
 				var advancements = mc.getConnection().getAdvancements();
 				advancements.setSelectedTab(advancements.get(RequestBoard.id("root")), false);
+				//? if >=26.1 {
 				mc.gui.setScreen(new net.minecraft.client.gui.screens.advancements.AdvancementsScreen(advancements));
+				//?} else
+				/*mc.setScreen(new net.minecraft.client.gui.screens.advancements.AdvancementsScreen(advancements));*/
 			});
 			ctx.waitTicks(10);
 			ctx.getInput().setCursorPos(480, 198);

@@ -11,12 +11,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.core.UUIDUtil;
+//? if >=26.1
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.saveddata.SavedData;
+//? if >=1.21.5
 import net.minecraft.world.level.saveddata.SavedDataType;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 /** World-wide storage of board requests and of items waiting for offline players. */
 public class RequestStorage extends SavedData {
@@ -43,9 +45,31 @@ public class RequestStorage extends SavedData {
 		PlayerStats.CODEC.listOf().optionalFieldOf("player_stats", List.of()).forGetter(s -> List.copyOf(s.stats.values()))
 	).apply(i, RequestStorage::new));
 
+	//? if >=1.21.5 {
 	public static final SavedDataType<RequestStorage> TYPE = new SavedDataType<>(
-		Identifier.fromNamespaceAndPath(RequestBoard.MOD_ID, "requests"), RequestStorage::new, CODEC, DataFixTypes.SAVED_DATA_COMMAND_STORAGE
+		//? if >=26.1 {
+		Identifier.fromNamespaceAndPath(RequestBoard.MOD_ID, "requests"),
+		//?} else
+		/*RequestBoard.MOD_ID + "_requests",*/
+		RequestStorage::new, CODEC, DataFixTypes.SAVED_DATA_COMMAND_STORAGE
 	);
+	//?} else {
+	/*public static final SavedData.Factory<RequestStorage> FACTORY =
+		new SavedData.Factory<>(RequestStorage::new, RequestStorage::load, DataFixTypes.SAVED_DATA_COMMAND_STORAGE);
+
+	private static RequestStorage load(net.minecraft.nbt.CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+		if (!tag.contains("data")) return new RequestStorage();
+		return CODEC.parse(registries.createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), tag.get("data"))
+			.resultOrPartial(error -> RequestBoard.LOGGER.error("Could not read board data: {}", error))
+			.orElseGet(RequestStorage::new);
+	}
+
+	@Override
+	public net.minecraft.nbt.CompoundTag save(net.minecraft.nbt.CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+		tag.put("data", CODEC.encodeStart(registries.createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), this).getOrThrow());
+		return tag;
+	}
+	*///?}
 
 	private final Map<UUID, BoardRequest> requests = new LinkedHashMap<>();
 	private final Map<UUID, List<ItemStack>> pendingItems = new HashMap<>();

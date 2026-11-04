@@ -1,0 +1,32 @@
+{
+  "parent": "requestboard:mission_accomplished",
+  "display": {
+    "icon": {
+      "id": "requestboard:advancement_icon",
+      "count": 1,
+      "components": {
+        "minecraft:custom_model_data": 7
+      }
+    },
+    "title": {
+      "translate": "advancements.requestboard.community_pillar.title"
+    },
+    "description": {
+      "translate": "advancements.requestboard.community_pillar.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ]
+}
