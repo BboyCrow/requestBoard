@@ -2,6 +2,7 @@ package io.github.clementgen.requestboard.client.screen;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import io.github.clementgen.requestboard.RequestBoard;
+import io.github.clementgen.requestboard.client.BoardStyle;
 import io.github.clementgen.requestboard.client.ClientBoardState;
 import io.github.clementgen.requestboard.config.RBConfig;
 import io.github.clementgen.requestboard.data.Acceptor;
@@ -25,7 +26,9 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.MultiLineEditBox;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.PlayerFaceExtractor;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -35,6 +38,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.permissions.Permissions;
@@ -49,7 +53,6 @@ import org.jspecify.annotations.Nullable;
 
 /** The notice board: list of requests, creation page and "my contracts". */
 public class RequestBoardScreen extends Screen {
-	private static final Identifier BOARD_TEX = RequestBoard.id("textures/gui/board.png");
 	private static final Identifier PARCHMENT_TEX = RequestBoard.id("textures/gui/parchment.png");
 	private static final Identifier PARCHMENT_LARGE_TEX = RequestBoard.id("textures/gui/parchment_large.png");
 
@@ -80,6 +83,9 @@ public class RequestBoardScreen extends Screen {
 	private static final int CARD_BG = 0xD8201610;
 	private static final int CARD_BG_HOVER = 0xE8302418;
 	private static final int CARD_BORDER = 0xFF8A6A42;
+	private static final int FIELD_BG = 0xFFF7EDD3;
+	private static final int FIELD_BORDER = 0xFF9A7B4F;
+	private static final int HINT = 0xFF9A8460;
 
 	private enum Tab { BOARD, CREATE, MINE }
 
@@ -102,6 +108,8 @@ public class RequestBoardScreen extends Screen {
 	private static @Nullable List<ItemStack> allItems;
 
 	private final List<ClickZone> zones = new ArrayList<>();
+	private final List<AbstractWidget> parchmentFields = new ArrayList<>();
+	private final Map<AbstractWidget, Component> fieldHints = new HashMap<>();
 	private final Map<UUID, ResolvableProfile> profiles = new HashMap<>();
 
 	private Tab tab = Tab.BOARD;
@@ -204,13 +212,21 @@ public class RequestBoardScreen extends Screen {
 		this.left = (this.width - W) / 2;
 		this.top = Math.max(22, (this.height - H) / 2 + 10);
 
+		this.parchmentFields.clear();
+		this.fieldHints.clear();
 		int tx = this.left + 2;
 		for (Tab t : Tab.values()) {
 			Button button = this.addRenderableWidget(Button.builder(tabLabel(t), b -> this.switchTab(t))
-				.bounds(tx, this.top - 20, 110, 18).build());
+				.bounds(tx, this.top - 20, 104, 18).build());
 			button.active = this.tab != t;
-			tx += 112;
+			tx += 106;
 		}
+		this.addRenderableWidget(Button.builder(Component.literal("✦"), b -> {
+			BoardStyle.choose(BoardStyle.current().next());
+			this.rebuildWidgets();
+		}).bounds(this.left + W - 20, this.top - 20, 18, 18)
+			.tooltip(Tooltip.create(Component.translatable("requestboard.style.button", Component.translatable(BoardStyle.current().translationKey()))))
+			.build());
 
 		if (this.selectedId != null && ClientBoardState.find(this.selectedId) != null && this.tab != Tab.CREATE) {
 			this.initDetailButtons(ClientBoardState.find(this.selectedId));
@@ -341,8 +357,8 @@ public class RequestBoardScreen extends Screen {
 		if (this.pickerOpen) {
 			int px = this.left + (W - PW) / 2;
 			int py = this.top + (H - PH) / 2;
-			EditBox search = new EditBox(this.font, px + 20, py + 30, PW - 40, 16, Component.translatable("requestboard.picker.search"));
-			search.setHint(Component.translatable("requestboard.picker.search"));
+			EditBox search = this.field(px + 20, py + 30, PW - 40, 16, Component.translatable("requestboard.picker.search"));
+			this.fieldHints.put(search, Component.translatable("requestboard.picker.search"));
 			search.setValue(this.pickerSearch);
 			search.setResponder(value -> {
 				this.pickerSearch = value;
@@ -370,9 +386,9 @@ public class RequestBoardScreen extends Screen {
 		}).bounds(x, this.top + 32, 140, 16).build());
 
 		if (cfg.timeLimit.enabled) {
-			EditBox duration = new EditBox(this.font, this.left + 270, this.top + 32, 50, 16, Component.translatable("requestboard.create.duration"));
+			EditBox duration = this.field(this.left + 270, this.top + 32, 50, 16, Component.translatable("requestboard.create.duration"));
 			duration.setMaxLength(6);
-			duration.setHint(Component.literal("-").withStyle(ChatFormatting.DARK_GRAY));
+			this.fieldHints.put(duration, Component.translatable("requestboard.create.duration_hint"));
 			duration.setValue(this.draftDuration);
 			duration.setResponder(value -> {
 				String digits = value.replaceAll("\\D", "");
@@ -385,9 +401,9 @@ public class RequestBoardScreen extends Screen {
 			this.addRenderableWidget(duration);
 		}
 
-		EditBox title = new EditBox(this.font, x, this.top + 52, 300, 16, Component.translatable("requestboard.create.title"));
+		EditBox title = this.field(x, this.top + 52, 300, 16, Component.translatable("requestboard.create.title"));
 		title.setMaxLength(cfg.maxTitleLength);
-		title.setHint(Component.translatable("requestboard.create.title_hint", cfg.maxTitleLength).withStyle(ChatFormatting.DARK_GRAY));
+		this.fieldHints.put(title, Component.translatable("requestboard.create.title_hint", cfg.maxTitleLength));
 		title.setValue(this.draftTitle);
 		title.setResponder(value -> this.draftTitle = value);
 		this.addRenderableWidget(title);
@@ -396,8 +412,14 @@ public class RequestBoardScreen extends Screen {
 			MultiLineEditBox details = MultiLineEditBox.builder()
 				.setX(x)
 				.setY(this.top + 72)
-				.setPlaceholder(Component.translatable("requestboard.create.details_hint").withStyle(ChatFormatting.DARK_GRAY))
+				.setShowBackground(false)
+				.setShowDecorations(false)
+				.setTextColor(INK)
+				.setTextShadow(false)
+				.setCursorColor(INK)
 				.build(this.font, 300, 34, Component.translatable("requestboard.create.details"));
+			this.parchmentFields.add(details);
+			this.fieldHints.put(details, Component.translatable("requestboard.create.details_hint"));
 			details.setCharacterLimit(cfg.maxDetailsLength);
 			details.setValue(this.draftDetails);
 			details.setValueListener(value -> this.draftDetails = value);
@@ -415,7 +437,7 @@ public class RequestBoardScreen extends Screen {
 		this.objectiveScroll = Math.max(0, Math.min(this.objectiveScroll, Math.max(0, this.draftObjectives.size() - OBJ_ROWS)));
 		for (int i = 0; i < OBJ_ROWS && i + this.objectiveScroll < this.draftObjectives.size(); i++) {
 			ObjectiveDraft draft = this.draftObjectives.get(i + this.objectiveScroll);
-			EditBox count = new EditBox(this.font, x + 20, this.top + 127 + i * 18, 44, 14, Component.translatable("requestboard.create.amount"));
+			EditBox count = this.field(x + 20, this.top + 126 + i * 18, 44, 16, Component.translatable("requestboard.create.amount"));
 			count.setMaxLength(7);
 			count.setValue(draft.count);
 			count.setResponder(value -> {
@@ -433,6 +455,39 @@ public class RequestBoardScreen extends Screen {
 			.bounds(this.left + 256, this.top + 208, 64, 16).build();
 		publish.active = !this.waitingForServer;
 		this.addRenderableWidget(publish);
+	}
+
+	/** A text field drawn as ink on light paper (frame painted by {@link #drawFields}). */
+	private EditBox field(int x, int y, int w, int h, Component narration) {
+		EditBox box = new EditBox(this.font, x + 4, y + (h - 8) / 2, w - 8, 9, narration);
+		box.setBordered(false);
+		box.setTextShadow(false);
+		box.setTextColor(INK);
+		box.setTextColorUneditable(INK_SOFT);
+		this.parchmentFields.add(box);
+		return box;
+	}
+
+	private void drawFields(GuiGraphicsExtractor g) {
+		for (AbstractWidget widget : this.parchmentFields) {
+			boolean multi = widget instanceof MultiLineEditBox;
+			int x = multi ? widget.getX() : widget.getX() - 4;
+			int y = multi ? widget.getY() : widget.getY() - 4;
+			int w = multi ? widget.getWidth() : widget.getWidth() + 8;
+			int h = multi ? widget.getHeight() : widget.getHeight() + 7;
+			g.fill(x, y, x + w, y + h, FIELD_BG);
+			g.outline(x, y, w, h, widget.isFocused() ? INK : FIELD_BORDER);
+			Component hint = this.fieldHints.get(widget);
+			boolean empty = widget instanceof EditBox box ? box.getValue().isEmpty()
+				: widget instanceof MultiLineEditBox area && area.getValue().isEmpty();
+			if (hint != null && empty && !widget.isFocused()) {
+				g.text(this.font, this.truncate(hint, w - 8), x + 4, y + (multi ? 4 : (h - 8) / 2), HINT, false);
+			}
+			if (multi && cfg().maxDetailsLength > 0) {
+				String counter = this.draftDetails.length() + "/" + cfg().maxDetailsLength;
+				g.text(this.font, counter, x + w - this.font.width(counter) - 2, y + h - 9, INK_SOFT, false);
+			}
+		}
 	}
 
 	private void refreshPicker() {
@@ -661,7 +716,7 @@ public class RequestBoardScreen extends Screen {
 	}
 
 	private void renderBoard(GuiGraphicsExtractor g, int mouseX, int mouseY, boolean interactive) {
-		g.blit(RenderPipelines.GUI_TEXTURED, BOARD_TEX, this.left, this.top, 0, 0, W, H, W, H);
+		this.drawBoardBackground(g);
 
 		int x0 = this.left + 10;
 		int y0 = this.top + 30;
@@ -676,7 +731,9 @@ public class RequestBoardScreen extends Screen {
 		if (requests.isEmpty()) {
 			Component empty = Component.translatable(ClientBoardState.requests().isEmpty() ? "requestboard.board.empty" : "requestboard.board.no_match");
 			int w = this.font.width(empty);
-			g.textWithBackdrop(this.font, empty, this.left + (W - w) / 2, this.top + H / 2, w, CREAM);
+			int ex = this.left + (W - w) / 2;
+			g.fill(ex - 6, this.top + H / 2 - 4, ex + w + 6, this.top + H / 2 + 12, 0xF0201610);
+			g.text(this.font, empty, ex, this.top + H / 2, CREAM, false);
 			return;
 		}
 
@@ -705,6 +762,12 @@ public class RequestBoardScreen extends Screen {
 		this.renderScrollbar(g, x1 + 2, y0, y1, scroll, maxScroll, contentH);
 	}
 
+	private void drawBoardBackground(GuiGraphicsExtractor g) {
+		BoardStyle style = BoardStyle.current();
+		g.blit(RenderPipelines.GUI_TEXTURED, style.background, this.left, this.top, 0, 0, W, H,
+			style.textureWidth, style.textureHeight, style.textureWidth, style.textureHeight);
+	}
+
 	private void renderScrollbar(GuiGraphicsExtractor g, int x, int y0, int y1, int scroll, int maxScroll, int contentH) {
 		if (maxScroll <= 0) return;
 		int trackH = y1 - y0;
@@ -731,7 +794,7 @@ public class RequestBoardScreen extends Screen {
 			badgeColor = GREEN;
 		}
 		int badgeW = badge == null ? 0 : this.font.width(badge) + 4;
-		g.text(this.font, this.font.plainSubstrByWidth(r.creatorName(), w - 30 - badgeW), x + 26, y + 5, WHITE, true);
+		g.text(this.font, this.ellipsis(r.creatorName(), w - 30 - badgeW), x + 26, y + 5, WHITE, true);
 		if (badge != null) {
 			g.text(this.font, badge, x + w - badgeW, y + 5, badgeColor, true);
 		}
@@ -742,10 +805,10 @@ public class RequestBoardScreen extends Screen {
 			g.text(this.font, time, x + w - this.font.width(time) - 4, y + 15, this.timeColor(r), true);
 		}
 
-		g.text(this.font, this.font.plainSubstrByWidth(r.title(), w - 10), x + 6, y + 26, CREAM, true);
+		g.text(this.font, this.ellipsis(r.title(), w - 10), x + 6, y + 26, CREAM, true);
 
 		// Objectives on the left, rewards on the right.
-		int iconY = y + 36;
+		int iconY = y + 34;
 		int half = (w - 12) / 2;
 		int maxObj = Math.max(1, half / 18);
 		for (int i = 0; i < Math.min(maxObj, r.objectives().size()); i++) {
@@ -764,13 +827,13 @@ public class RequestBoardScreen extends Screen {
 		}
 
 		Component acceptedBy = Component.translatable("requestboard.accepted_by", this.acceptorNames(r));
-		g.text(this.font, this.font.substrByWidth(acceptedBy, w - 10).getString(), x + 6, y + h - 10, GRAY, true);
+		g.text(this.font, this.truncate(acceptedBy, w - 10), x + 6, y + h - 10, GRAY, true);
 	}
 
 	// ---- My contracts tab
 
 	private void renderMine(GuiGraphicsExtractor g, int mouseX, int mouseY, boolean interactive) {
-		g.blit(RenderPipelines.GUI_TEXTURED, BOARD_TEX, this.left, this.top, 0, 0, W, H, W, H);
+		this.drawBoardBackground(g);
 		UUID me = this.myId();
 		List<BoardRequest> mine = new ArrayList<>();
 		List<BoardRequest> accepted = new ArrayList<>();
@@ -816,7 +879,10 @@ public class RequestBoardScreen extends Screen {
 	}
 
 	private int sectionHeader(GuiGraphicsExtractor g, Component text, int x, int y) {
-		g.textWithBackdrop(this.font, text, x + 2, y + 3, this.font.width(text), GOLD);
+		int w = this.font.width(text) + 10;
+		g.fill(x, y + 1, x + w, y + 13, 0xF0201610);
+		g.outline(x, y + 1, w, 12, CARD_BORDER);
+		g.text(this.font, text, x + 5, y + 3, GOLD, false);
 		return y + 16;
 	}
 
@@ -836,19 +902,19 @@ public class RequestBoardScreen extends Screen {
 
 		int buttonsW = created ? 3 * 40 : 2 * 40;
 		int textW = w - 30 - buttonsW - 4;
-		g.text(this.font, this.font.plainSubstrByWidth(r.title(), textW), x + 26, y + 3, CREAM, true);
+		g.text(this.font, this.ellipsis(r.title(), textW), x + 26, y + 3, CREAM, true);
 		MutableComponent info = Component.translatable(r.category().translationKey()).withColor(r.category().color());
 		if (created) {
-			info.append(Component.literal(" · ").withStyle(ChatFormatting.GRAY))
-				.append(Component.translatable("requestboard.mine.participants", r.acceptors().size()).withStyle(ChatFormatting.GRAY));
+			info.append(Component.literal(" · ").withColor(GRAY))
+				.append(Component.translatable("requestboard.mine.participants", r.acceptors().size()).withColor(GRAY));
 		} else {
-			info.append(Component.literal(" · ").withStyle(ChatFormatting.GRAY))
-				.append(Component.translatable("requestboard.by", r.creatorName()).withStyle(ChatFormatting.GRAY));
+			info.append(Component.literal(" · ").withColor(GRAY))
+				.append(Component.translatable("requestboard.by", r.creatorName()).withColor(GRAY));
 		}
 		if (r.hasTimeLimit()) {
-			info.append(Component.literal(" · ").withStyle(ChatFormatting.GRAY)).append(this.timeLeft(r).copy().withColor(this.timeColor(r)));
+			info.append(Component.literal(" · ").withColor(GRAY)).append(this.timeLeft(r).copy().withColor(this.timeColor(r)));
 		}
-		g.text(this.font, this.font.substrByWidth(info, textW).getString().isEmpty() ? FormattedCharSequence.EMPTY : truncate(info, textW), x + 26, y + 13, WHITE, true);
+		g.text(this.font, truncate(info, textW), x + 26, y + 13, WHITE, true);
 
 		boolean rowVisible = y + h > clipTop && y < clipBottom;
 		int bx = x + w - buttonsW - 2;
@@ -867,7 +933,16 @@ public class RequestBoardScreen extends Screen {
 	}
 
 	private FormattedCharSequence truncate(Component text, int width) {
-		return net.minecraft.locale.Language.getInstance().getVisualOrder(this.font.substrByWidth(text, width));
+		if (this.font.width(text) <= width) {
+			return text.getVisualOrderText();
+		}
+		FormattedText cut = this.font.substrByWidth(text, width - this.font.width("…"));
+		return net.minecraft.locale.Language.getInstance().getVisualOrder(FormattedText.composite(cut, FormattedText.of("…")));
+	}
+
+	private String ellipsis(String text, int width) {
+		if (this.font.width(text) <= width) return text;
+		return this.font.plainSubstrByWidth(text, width - this.font.width("…")) + "…";
 	}
 
 	private void miniConfirmButton(GuiGraphicsExtractor g, BoardRequest r, RBPayloads.Action action, String key, int x, int y, int color,
@@ -986,10 +1061,11 @@ public class RequestBoardScreen extends Screen {
 
 	private void renderCreate(GuiGraphicsExtractor g, int mouseX, int mouseY, boolean interactive) {
 		RBConfig cfg = cfg();
-		g.blit(RenderPipelines.GUI_TEXTURED, BOARD_TEX, this.left, this.top, 0, 0, W, H, W, H);
+		this.drawBoardBackground(g);
 		int px = this.left + 6;
 		int py = this.top + 6;
 		g.blit(RenderPipelines.GUI_TEXTURED, PARCHMENT_LARGE_TEX, px, py, 0, 0, LW, LH, LW, LH);
+		if (!this.pickerOpen) this.drawFields(g);
 
 		Component header = this.waitingForServer
 			? Component.translatable("requestboard.create.sending")
@@ -1131,6 +1207,7 @@ public class RequestBoardScreen extends Screen {
 		g.blit(RenderPipelines.GUI_TEXTURED, PARCHMENT_TEX, px, py, 0, 0, PW, PH, PW, PH);
 		Component title = Component.translatable("requestboard.picker.title").withStyle(ChatFormatting.BOLD);
 		g.text(this.font, title, px + (PW - this.font.width(title)) / 2, py + 18, INK, false);
+		this.drawFields(g);
 
 		int gx = px + (PW - PICKER_COLS * 18) / 2;
 		int gy = py + 52;
@@ -1237,8 +1314,9 @@ public class RequestBoardScreen extends Screen {
 		int stacks = count / maxStack;
 		int rest = count % maxStack;
 		if (stacks == 0) return Component.translatable("requestboard.items", rest).getString();
-		if (rest == 0) return Component.translatable("requestboard.stacks", stacks).getString();
-		return Component.translatable("requestboard.stacks_rest", stacks, rest).getString();
+		String key = stacks == 1 ? "requestboard.stack" : "requestboard.stacks";
+		if (rest == 0) return Component.translatable(key, stacks).getString();
+		return Component.translatable(key + "_rest", stacks, rest).getString();
 	}
 
 	private static int darker(int color) {

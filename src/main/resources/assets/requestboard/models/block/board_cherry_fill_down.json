@@ -1,0 +1,83 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "minecraft:block/cherry_planks",
+    "planks": "minecraft:block/cherry_planks",
+    "log": "minecraft:block/cherry_log",
+    "log_top": "minecraft:block/cherry_log_top",
+    "note0": "requestboard:block/request_note_0",
+    "note1": "requestboard:block/request_note_1",
+    "note2": "requestboard:block/request_note_2",
+    "note3": "requestboard:block/request_note_3"
+  },
+  "elements": [
+    {
+      "from": [
+        2,
+        0,
+        7
+      ],
+      "to": [
+        14,
+        3,
+        9
+      ],
+      "faces": {
+        "north": {
+          "texture": "#planks",
+          "uv": [
+            2,
+            13,
+            14,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#planks",
+          "uv": [
+            2,
+            13,
+            14,
+            16
+          ]
+        },
+        "up": {
+          "texture": "#planks",
+          "uv": [
+            2,
+            7,
+            14,
+            9
+          ]
+        },
+        "down": {
+          "texture": "#planks",
+          "uv": [
+            2,
+            7,
+            14,
+            9
+          ]
+        },
+        "west": {
+          "texture": "#planks",
+          "uv": [
+            7,
+            13,
+            9,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#planks",
+          "uv": [
+            7,
+            13,
+            9,
+            16
+          ]
+        }
+      }
+    }
+  ]
+}

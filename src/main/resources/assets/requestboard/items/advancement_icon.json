@@ -1,0 +1,68 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "cases": [
+      {
+        "when": "first_request",
+        "model": {
+          "type": "minecraft:model",
+          "model": "requestboard:item/icon_first_request"
+        }
+      },
+      {
+        "when": "requests_10",
+        "model": {
+          "type": "minecraft:model",
+          "model": "requestboard:item/icon_requests_10"
+        }
+      },
+      {
+        "when": "requests_100",
+        "model": {
+          "type": "minecraft:model",
+          "model": "requestboard:item/icon_requests_100"
+        }
+      },
+      {
+        "when": "patron",
+        "model": {
+          "type": "minecraft:model",
+          "model": "requestboard:item/icon_patron"
+        }
+      },
+      {
+        "when": "accept_request",
+        "model": {
+          "type": "minecraft:model",
+          "model": "requestboard:item/icon_accept_request"
+        }
+      },
+      {
+        "when": "mission_accomplished",
+        "model": {
+          "type": "minecraft:model",
+          "model": "requestboard:item/icon_mission_accomplished"
+        }
+      },
+      {
+        "when": "community_pillar",
+        "model": {
+          "type": "minecraft:model",
+          "model": "requestboard:item/icon_community_pillar"
+        }
+      },
+      {
+        "when": "village_legend",
+        "model": {
+          "type": "minecraft:model",
+          "model": "requestboard:item/icon_village_legend"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "requestboard:item/icon_first_request"
+    }
+  }
+}

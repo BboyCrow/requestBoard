@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
@@ -91,6 +92,7 @@ public final class RequestManager {
 			sendConfig(player);
 			sendRequests(player);
 		}
+		BoardAdvancements.sync(player, storage(player.level().getServer()).stats(player.getUUID()));
 		List<ItemStack> pending = storage(player.level().getServer()).takePending(player.getUUID());
 		if (!pending.isEmpty()) {
 			int total = 0;
@@ -215,6 +217,7 @@ public final class RequestManager {
 			objectives, rewards, withdraw && !rewards.isEmpty(), now, expiresAt, List.of()
 		);
 		storage.add(request);
+		BoardAdvancements.sync(player, storage.addPosted(player.getUUID()));
 
 		ServerPlayNetworking.send(player, new RBPayloads.CreateResult(true, Component.translatable("requestboard.msg.created", title)));
 		playSound(player, SoundEvents.BOOK_PUT);
@@ -272,6 +275,9 @@ public final class RequestManager {
 		}
 		request.addAcceptor(new Acceptor(player.getUUID(), player.getPlainTextName(), System.currentTimeMillis()));
 		storage.setDirty();
+		if (!own) {
+			BoardAdvancements.grant(player, BoardAdvancements.ACCEPT_REQUEST);
+		}
 		player.sendSystemMessage(Component.translatable("requestboard.msg.accepted", request.title()).withStyle(ChatFormatting.GREEN));
 		playSound(player, SoundEvents.VILLAGER_WORK_CARTOGRAPHER);
 		notify(player.level().getServer(), request.creator(),
@@ -296,11 +302,21 @@ public final class RequestManager {
 		}
 		MinecraftServer server = player.level().getServer();
 		storage.remove(request.id());
-		boolean dispatched = dispatchRewards(server, request, storage);
+		Set<UUID> rewarded = dispatchRewards(server, request, storage);
+		boolean dispatched = !rewarded.isEmpty();
 		player.sendSystemMessage(Component.translatable(dispatched ? "requestboard.msg.closed_dispatched" : "requestboard.msg.closed", request.title()).withStyle(ChatFormatting.GREEN));
 		playSound(player, SoundEvents.EXPERIENCE_ORB_PICKUP);
+		if (rewarded.size() >= 3) {
+			BoardAdvancements.grant(player, BoardAdvancements.PATRON);
+		}
 		for (Acceptor acceptor : request.acceptors()) {
-			notify(server, acceptor.id(), Component.translatable(dispatched ? "requestboard.msg.acceptor_closed_rewarded" : "requestboard.msg.acceptor_closed",
+			boolean gotReward = rewarded.contains(acceptor.id());
+			RequestStorage.PlayerStats stats = storage.addCompleted(acceptor.id(), gotReward);
+			ServerPlayer online = server.getPlayerList().getPlayer(acceptor.id());
+			if (online != null) {
+				BoardAdvancements.sync(online, stats);
+			}
+			notify(server, acceptor.id(), Component.translatable(gotReward ? "requestboard.msg.acceptor_closed_rewarded" : "requestboard.msg.acceptor_closed",
 				request.creatorName(), request.title()).withStyle(ChatFormatting.GREEN));
 		}
 	}
@@ -355,16 +371,16 @@ public final class RequestManager {
 		}
 	}
 
-	/** Splits escrowed rewards between acceptors. Returns true if anything went to acceptors. */
-	private static boolean dispatchRewards(MinecraftServer server, BoardRequest request, RequestStorage storage) {
+	/** Splits escrowed rewards between acceptors. Returns the players who received something. */
+	private static Set<UUID> dispatchRewards(MinecraftServer server, BoardRequest request, RequestStorage storage) {
 		if (!request.rewardsEscrowed() || request.rewards().isEmpty()) {
-			return false;
+			return Set.of();
 		}
 		RBConfig cfg = config();
 		List<Acceptor> acceptors = new ArrayList<>(request.acceptors());
 		if (!cfg.effectiveAutoDispatch() || acceptors.isEmpty()) {
 			returnRewards(server, request, storage);
-			return false;
+			return Set.of();
 		}
 		acceptors.sort(Comparator.comparingLong(Acceptor::acceptedAt));
 
@@ -421,7 +437,7 @@ public final class RequestManager {
 			deliver(server, storage, share.getKey(), share.getValue());
 		}
 		deliver(server, storage, request.creator(), backToCreator);
-		return !shares.isEmpty();
+		return shares.keySet();
 	}
 
 	private static void splitIntoStacks(ItemStack proto, int amount, List<ItemStack> out) {

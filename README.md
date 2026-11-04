@@ -6,14 +6,32 @@ A shared notice board for Minecraft servers (Fabric, Minecraft 26.3). Players po
 
 ## Features
 
-- **Request Board block**: it takes the colour of the wood and stone used to craft it (12 woods × 16 stone roofs).
+- **Request Board block**: it takes the colour of the wood and stone used to craft it (12 woods × 16 stone roofs, all in their own creative tab). Boards facing the same way merge into one big board (2×2, 3×2…), and the pinned notes are laid out at random so a big board never looks repetitive.
 - **Board**: request cards show the player head and name, a "your request" / "accepted" badge, the category, title, requested items with amounts, rewards, a live countdown and the list of players who accepted.
 - **Filters**: by category and by player.
 - **Detail view** on a parchment scroll, with Accept / Withdraw / Close / Delete. Several players can accept the same request, and everyone can see who accepted it.
 - **New request page**: category, title, details, time limit, requested items picked from a searchable list (any amount, counted in stacks), and rewards clicked straight from your inventory.
 - **My contracts**: your requests (close or delete in one click, with confirmation) and the contracts you accepted.
 - **Rewards**: optionally withdrawn when the request is posted. On close, they are split evenly between the acceptors, and the remainder goes to a random player, the first to accept or back to the creator. When a request is deleted or expires, the rewards go back to the creator. Items owed to offline players are delivered at their next login.
+- **Two looks**: *Modern* (sticky notes on a cork-like board) or *Adventure* (an old quest board with bounty posters and a dagger). Each player switches with the ✦ button next to the tabs; the server sets the default.
+- **Advancements**: their own tab, from crafting a board to taking part in 100 completed contracts (see below).
 - **Server-authoritative**: every action is validated server-side, and the server's config is synced to clients.
+
+## Advancements
+
+| Advancement | How to get it |
+|---|---|
+| Hear Ye, Hear Ye | Craft a request board |
+| First Contract | Post your first request |
+| Town Crier | Post 10 requests |
+| Taskmaster (challenge) | Post 100 requests |
+| Patron | Close a request whose reward is shared between 3 or more players |
+| At Your Service | Accept another player's request |
+| Mission Accomplished | Receive your share of a reward when a request is closed |
+| Pillar of the Community (challenge) | Take part in 10 completed contracts |
+| Village Legend (challenge) | Take part in 100 completed contracts |
+
+Counters are kept per player in the world save, so players who were offline when a contract was closed get their advancements at their next login.
 
 ## Crafting
 
@@ -40,6 +58,7 @@ F   F     B = book and quill
 | `operatorsCanRemoveAny` | true | Operators can delete any request |
 | `broadcastNewRequests` | true | Announce new requests in chat |
 | `playSounds` | true | Sounds on board events |
+| `defaultStyle` | MODERN | Board look for players who haven't picked one: `MODERN` or `FANTASY` |
 | `categories.announcement/service/harvest` | true | Enable each category |
 | `rewards.enabled` | true | Allow rewards |
 | `rewards.autoWithdraw` | true | Take rewards from the creator's inventory when posting |

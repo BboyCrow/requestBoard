@@ -55,6 +55,7 @@ public class RBConfig {
 	public boolean operatorsCanRemoveAny = true;
 	public boolean broadcastNewRequests = true;
 	public boolean playSounds = true;
+	public String defaultStyle = "MODERN";
 	public Categories categories = new Categories();
 	public Rewards rewards = new Rewards();
 	public TimeLimit timeLimit = new TimeLimit();
@@ -105,6 +106,7 @@ public class RBConfig {
 		if (this.rewards == null) this.rewards = new Rewards();
 		if (this.rewards.remainderMode == null) this.rewards.remainderMode = RemainderMode.RANDOM;
 		if (this.timeLimit == null) this.timeLimit = new TimeLimit();
+		if (this.defaultStyle == null) this.defaultStyle = "MODERN";
 		this.maxTitleLength = clamp(this.maxTitleLength, 8, 128);
 		this.maxDetailsLength = clamp(this.maxDetailsLength, 0, 2000);
 		this.maxActiveRequestsPerPlayer = Math.max(0, this.maxActiveRequestsPerPlayer);
@@ -167,6 +169,7 @@ public class RBConfig {
 		help.put("operatorsCanRemoveAny", "Operators can delete any request (rewards go back to the creator).");
 		help.put("broadcastNewRequests", "Announce new requests in chat to every player.");
 		help.put("playSounds", "Play a sound on board events.");
+		help.put("defaultStyle", "Board look for players who have not picked one: MODERN (sticky notes) or FANTASY (old quest board).");
 		help.put("categories", "Enable or disable each category (at least one stays enabled).");
 		help.put("rewards.enabled", "Allow rewards (items from the creator's inventory only).");
 		help.put("rewards.autoWithdraw", "Take reward items from the creator's inventory when the request is posted. If false, rewards are only shown and handed over manually.");

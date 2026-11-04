@@ -1,0 +1,41 @@
+{
+  "display": {
+    "icon": {
+      "id": "requestboard:request_board",
+      "components": {
+        "minecraft:block_state": {
+          "wood": "oak",
+          "roof": "stone"
+        }
+      }
+    },
+    "title": {
+      "translate": "advancements.requestboard.root.title"
+    },
+    "description": {
+      "translate": "advancements.requestboard.root.description"
+    },
+    "frame": "task",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false,
+    "background": "minecraft:block/spruce_planks"
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "requestboard:request_board"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ]
+}

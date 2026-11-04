@@ -1,0 +1,83 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "minecraft:block/bamboo_planks",
+    "planks": "minecraft:block/bamboo_planks",
+    "log": "minecraft:block/bamboo_block",
+    "log_top": "minecraft:block/bamboo_block_top",
+    "note0": "requestboard:block/request_note_0",
+    "note1": "requestboard:block/request_note_1",
+    "note2": "requestboard:block/request_note_2",
+    "note3": "requestboard:block/request_note_3"
+  },
+  "elements": [
+    {
+      "from": [
+        2,
+        2,
+        6.5
+      ],
+      "to": [
+        14,
+        3,
+        9.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#log",
+          "uv": [
+            2,
+            0,
+            14,
+            1
+          ]
+        },
+        "south": {
+          "texture": "#log",
+          "uv": [
+            2,
+            0,
+            14,
+            1
+          ]
+        },
+        "up": {
+          "texture": "#log",
+          "uv": [
+            2,
+            0,
+            14,
+            3
+          ]
+        },
+        "down": {
+          "texture": "#log",
+          "uv": [
+            2,
+            0,
+            14,
+            3
+          ]
+        },
+        "west": {
+          "texture": "#log",
+          "uv": [
+            0,
+            0,
+            3,
+            1
+          ]
+        },
+        "east": {
+          "texture": "#log",
+          "uv": [
+            0,
+            0,
+            3,
+            1
+          ]
+        }
+      }
+    }
+  ]
+}

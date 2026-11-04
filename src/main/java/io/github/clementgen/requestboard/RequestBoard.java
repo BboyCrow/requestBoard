@@ -3,12 +3,14 @@ package io.github.clementgen.requestboard;
 import io.github.clementgen.requestboard.block.BoardRoof;
 import io.github.clementgen.requestboard.block.BoardWood;
 import io.github.clementgen.requestboard.block.RequestBoardBlock;
+import io.github.clementgen.requestboard.block.RequestBoardItem;
 import io.github.clementgen.requestboard.config.RBConfig;
 import io.github.clementgen.requestboard.network.RBPayloads;
 import io.github.clementgen.requestboard.server.RequestManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
+import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -19,7 +21,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -49,7 +51,26 @@ public class RequestBoard implements ModInitializer {
 			.ignitedByLava()));
 
 	public static final Item REQUEST_BOARD_ITEM = Registry.register(BuiltInRegistries.ITEM, BOARD_ITEM_KEY,
-		new BlockItem(REQUEST_BOARD, new Item.Properties().setId(BOARD_ITEM_KEY).useBlockDescriptionPrefix()));
+		new RequestBoardItem(REQUEST_BOARD, new Item.Properties().setId(BOARD_ITEM_KEY).useBlockDescriptionPrefix()));
+
+	/** Hidden item only used as the icon of the mod's advancements (look picked by custom_model_data). */
+	public static final ResourceKey<Item> ICON_ITEM_KEY = ResourceKey.create(Registries.ITEM, id("advancement_icon"));
+	public static final Item ADVANCEMENT_ICON = Registry.register(BuiltInRegistries.ITEM, ICON_ITEM_KEY,
+		new Item(new Item.Properties().setId(ICON_ITEM_KEY).stacksTo(1)));
+
+	public static final CreativeModeTab TAB = Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB,
+		ResourceKey.create(Registries.CREATIVE_MODE_TAB, id("request_boards")),
+		FabricCreativeModeTab.builder()
+			.title(Component.translatable("itemGroup.requestboard.request_boards"))
+			.icon(() -> RequestBoardBlock.withVariant(new ItemStack(REQUEST_BOARD_ITEM), BoardWood.OAK, BoardRoof.STONE))
+			.displayItems((parameters, output) -> {
+				for (BoardWood wood : BoardWood.values()) {
+					for (BoardRoof roof : BoardRoof.values()) {
+						output.accept(RequestBoardBlock.withVariant(new ItemStack(REQUEST_BOARD_ITEM), wood, roof));
+					}
+				}
+			})
+			.build());
 
 	public static Identifier id(String path) {
 		return Identifier.fromNamespaceAndPath(MOD_ID, path);
@@ -78,11 +99,8 @@ public class RequestBoard implements ModInitializer {
 					return 1;
 				}))));
 
-		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS).register(output -> {
-			for (BoardWood wood : BoardWood.values()) {
-				output.accept(RequestBoardBlock.withVariant(new ItemStack(REQUEST_BOARD_ITEM), wood, BoardRoof.STONE));
-			}
-		});
+		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS).register(output ->
+			output.accept(RequestBoardBlock.withVariant(new ItemStack(REQUEST_BOARD_ITEM), BoardWood.OAK, BoardRoof.STONE)));
 
 		LOGGER.info("RequestBoard ready");
 	}

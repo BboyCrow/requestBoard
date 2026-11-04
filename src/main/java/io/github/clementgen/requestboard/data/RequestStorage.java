@@ -27,9 +27,20 @@ public class RequestStorage extends SavedData {
 		).apply(i, Pending::new));
 	}
 
+	/** Per-player counters used by the advancements. */
+	public record PlayerStats(UUID player, int posted, int completed, boolean rewarded) {
+		static final Codec<PlayerStats> CODEC = RecordCodecBuilder.create(i -> i.group(
+			UUIDUtil.CODEC.fieldOf("player").forGetter(PlayerStats::player),
+			Codec.INT.optionalFieldOf("posted", 0).forGetter(PlayerStats::posted),
+			Codec.INT.optionalFieldOf("completed", 0).forGetter(PlayerStats::completed),
+			Codec.BOOL.optionalFieldOf("rewarded", false).forGetter(PlayerStats::rewarded)
+		).apply(i, PlayerStats::new));
+	}
+
 	public static final Codec<RequestStorage> CODEC = RecordCodecBuilder.create(i -> i.group(
 		BoardRequest.CODEC.listOf().optionalFieldOf("requests", List.of()).forGetter(s -> List.copyOf(s.requests.values())),
-		Pending.CODEC.listOf().optionalFieldOf("pending_items", List.of()).forGetter(RequestStorage::pendingList)
+		Pending.CODEC.listOf().optionalFieldOf("pending_items", List.of()).forGetter(RequestStorage::pendingList),
+		PlayerStats.CODEC.listOf().optionalFieldOf("player_stats", List.of()).forGetter(s -> List.copyOf(s.stats.values()))
 	).apply(i, RequestStorage::new));
 
 	public static final SavedDataType<RequestStorage> TYPE = new SavedDataType<>(
@@ -38,8 +49,16 @@ public class RequestStorage extends SavedData {
 
 	private final Map<UUID, BoardRequest> requests = new LinkedHashMap<>();
 	private final Map<UUID, List<ItemStack>> pendingItems = new HashMap<>();
+	private final Map<UUID, PlayerStats> stats = new HashMap<>();
 
 	public RequestStorage() {
+	}
+
+	private RequestStorage(List<BoardRequest> requests, List<Pending> pending, List<PlayerStats> stats) {
+		this(requests, pending);
+		for (PlayerStats stat : stats) {
+			this.stats.put(stat.player(), stat);
+		}
 	}
 
 	private RequestStorage(List<BoardRequest> requests, List<Pending> pending) {
@@ -56,6 +75,26 @@ public class RequestStorage extends SavedData {
 			.filter(e -> !e.getValue().isEmpty())
 			.map(e -> new Pending(e.getKey(), List.copyOf(e.getValue())))
 			.toList();
+	}
+
+	public PlayerStats stats(UUID player) {
+		return this.stats.getOrDefault(player, new PlayerStats(player, 0, 0, false));
+	}
+
+	public PlayerStats addPosted(UUID player) {
+		PlayerStats old = this.stats(player);
+		return this.putStats(new PlayerStats(player, old.posted() + 1, old.completed(), old.rewarded()));
+	}
+
+	public PlayerStats addCompleted(UUID player, boolean rewarded) {
+		PlayerStats old = this.stats(player);
+		return this.putStats(new PlayerStats(player, old.posted(), old.completed() + 1, old.rewarded() || rewarded));
+	}
+
+	private PlayerStats putStats(PlayerStats stats) {
+		this.stats.put(stats.player(), stats);
+		this.setDirty();
+		return stats;
 	}
 
 	public Collection<BoardRequest> requests() {

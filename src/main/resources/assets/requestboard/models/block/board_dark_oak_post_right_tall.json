@@ -1,0 +1,83 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "minecraft:block/dark_oak_planks",
+    "planks": "minecraft:block/dark_oak_planks",
+    "log": "minecraft:block/dark_oak_log",
+    "log_top": "minecraft:block/dark_oak_log_top",
+    "note0": "requestboard:block/request_note_0",
+    "note1": "requestboard:block/request_note_1",
+    "note2": "requestboard:block/request_note_2",
+    "note3": "requestboard:block/request_note_3"
+  },
+  "elements": [
+    {
+      "from": [
+        14,
+        0,
+        6
+      ],
+      "to": [
+        16,
+        16,
+        10
+      ],
+      "faces": {
+        "north": {
+          "texture": "#log",
+          "uv": [
+            14,
+            0,
+            16,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#log",
+          "uv": [
+            14,
+            0,
+            16,
+            16
+          ]
+        },
+        "west": {
+          "texture": "#log",
+          "uv": [
+            6,
+            0,
+            10,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#log",
+          "uv": [
+            6,
+            0,
+            10,
+            16
+          ]
+        },
+        "up": {
+          "texture": "#log_top",
+          "uv": [
+            14,
+            6,
+            16,
+            10
+          ]
+        },
+        "down": {
+          "texture": "#log_top",
+          "uv": [
+            14,
+            6,
+            16,
+            10
+          ]
+        }
+      }
+    }
+  ]
+}

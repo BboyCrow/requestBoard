@@ -1,0 +1,83 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "minecraft:block/crimson_planks",
+    "planks": "minecraft:block/crimson_planks",
+    "log": "minecraft:block/crimson_stem",
+    "log_top": "minecraft:block/crimson_stem_top",
+    "note0": "requestboard:block/request_note_0",
+    "note1": "requestboard:block/request_note_1",
+    "note2": "requestboard:block/request_note_2",
+    "note3": "requestboard:block/request_note_3"
+  },
+  "elements": [
+    {
+      "from": [
+        2,
+        14,
+        7
+      ],
+      "to": [
+        14,
+        16,
+        9
+      ],
+      "faces": {
+        "north": {
+          "texture": "#planks",
+          "uv": [
+            2,
+            0,
+            14,
+            2
+          ]
+        },
+        "south": {
+          "texture": "#planks",
+          "uv": [
+            2,
+            0,
+            14,
+            2
+          ]
+        },
+        "up": {
+          "texture": "#planks",
+          "uv": [
+            2,
+            7,
+            14,
+            9
+          ]
+        },
+        "down": {
+          "texture": "#planks",
+          "uv": [
+            2,
+            7,
+            14,
+            9
+          ]
+        },
+        "west": {
+          "texture": "#planks",
+          "uv": [
+            7,
+            0,
+            9,
+            2
+          ]
+        },
+        "east": {
+          "texture": "#planks",
+          "uv": [
+            7,
+            0,
+            9,
+            2
+          ]
+        }
+      }
+    }
+  ]
+}

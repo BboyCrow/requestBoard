@@ -1,0 +1,35 @@
+{
+  "parent": "requestboard:requests_10",
+  "display": {
+    "icon": {
+      "id": "requestboard:advancement_icon",
+      "components": {
+        "minecraft:custom_model_data": {
+          "strings": [
+            "requests_100"
+          ]
+        }
+      }
+    },
+    "title": {
+      "translate": "advancements.requestboard.requests_100.title"
+    },
+    "description": {
+      "translate": "advancements.requestboard.requests_100.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ]
+}
