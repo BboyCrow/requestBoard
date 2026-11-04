@@ -769,10 +769,15 @@ public class RequestBoardScreen extends Screen {
 		int my = overlay ? -1 : mouseY;
 
 		g.underOverlay = overlay;
-		switch (this.tab) {
-			case BOARD -> this.renderBoard(g, mx, my, !overlay);
-			case CREATE -> this.renderCreate(g, mx, my, !overlay);
-			case MINE -> this.renderMine(g, mx, my, !overlay);
+		if (overlay && Gfx.LEGACY_LAYERING) {
+			// Old versions would let the content below show through the scroll: draw only the board.
+			this.drawBoardBackground(g);
+		} else {
+			switch (this.tab) {
+				case BOARD -> this.renderBoard(g, mx, my, !overlay);
+				case CREATE -> this.renderCreate(g, mx, my, !overlay);
+				case MINE -> this.renderMine(g, mx, my, !overlay);
+			}
 		}
 
 		g.underOverlay = false;

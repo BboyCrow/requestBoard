@@ -49,6 +49,12 @@ public final class Gfx {
 	private static final boolean ITEMS_DRAWN_ON_TOP = false;
 	//?} else
 	/*private static final boolean ITEMS_DRAWN_ON_TOP = true;*/
+
+	/**
+	 * True when drawing order can't be relied on (before 1.21.6, text and items have their own depth),
+	 * so anything under an overlay would show through it.
+	 */
+	public static final boolean LEGACY_LAYERING = ITEMS_DRAWN_ON_TOP;
 	public boolean underOverlay;
 
 	/** Tooltip to draw last (1.21.1 draws tooltips immediately, so they are deferred). */
