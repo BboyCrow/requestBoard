@@ -13,8 +13,8 @@
 	"icon": "assets/requestboard/icon.png",
 	"environment": "*",
 	"entrypoints": {
-		"main": ["io.github.clementgen.requestboard.RequestBoard"],
-		"client": ["io.github.clementgen.requestboard.client.RequestBoardClient"]
+		"main": ["io.github.bboycrow.requestboard.RequestBoard"],
+		"client": ["io.github.bboycrow.requestboard.client.RequestBoardClient"]
 	},
 	"depends": {
 		"fabricloader": ">=${loader}",
