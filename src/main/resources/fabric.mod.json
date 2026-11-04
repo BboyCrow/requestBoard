@@ -1,0 +1,25 @@
+{
+	"schemaVersion": 1,
+	"id": "requestboard",
+	"version": "${version}",
+	"name": "RequestBoard",
+	"description": "A shared notice board where players post announcements, services and harvest requests.",
+	"authors": ["ClementGen"],
+	"contact": {
+		"sources": "https://github.com/ClementGen/requestBoard",
+		"issues": "https://github.com/ClementGen/requestBoard/issues"
+	},
+	"license": "MIT",
+	"icon": "assets/requestboard/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": ["io.github.clementgen.requestboard.RequestBoard"],
+		"client": ["io.github.clementgen.requestboard.client.RequestBoardClient"]
+	},
+	"depends": {
+		"fabricloader": ">=0.20.1",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

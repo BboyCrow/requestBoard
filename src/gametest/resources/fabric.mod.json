@@ -1,0 +1,13 @@
+{
+	"schemaVersion": 1,
+	"id": "requestboard-gametest",
+	"version": "1.0.0",
+	"name": "RequestBoard client tests",
+	"environment": "*",
+	"entrypoints": {
+		"fabric-client-gametest": ["io.github.clementgen.requestboard.gametest.RequestBoardClientTest"]
+	},
+	"depends": {
+		"requestboard": "*"
+	}
+}

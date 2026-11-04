@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "request_board",
+  "key": {
+    "S": [
+      "minecraft:sandstone_slab",
+      "minecraft:smooth_sandstone_slab",
+      "minecraft:cut_sandstone_slab"
+    ],
+    "P": "minecraft:pale_oak_planks",
+    "B": "minecraft:writable_book",
+    "F": "minecraft:pale_oak_fence"
+  },
+  "pattern": [
+    "SSS",
+    "PBP",
+    "F F"
+  ],
+  "result": {
+    "id": "requestboard:request_board",
+    "components": {
+      "minecraft:block_state": {
+        "wood": "pale_oak",
+        "roof": "sandstone"
+      }
+    }
+  }
+}

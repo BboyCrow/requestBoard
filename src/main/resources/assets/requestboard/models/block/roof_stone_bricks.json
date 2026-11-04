@@ -1,0 +1,137 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "minecraft:block/stone_bricks",
+    "stone": "minecraft:block/stone_bricks"
+  },
+  "elements": [
+    {
+      "from": [
+        -1,
+        14,
+        3
+      ],
+      "to": [
+        17,
+        15,
+        13
+      ],
+      "faces": {
+        "north": {
+          "texture": "#stone",
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ]
+        },
+        "south": {
+          "texture": "#stone",
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ]
+        },
+        "east": {
+          "texture": "#stone",
+          "uv": [
+            3,
+            0,
+            13,
+            1
+          ]
+        },
+        "west": {
+          "texture": "#stone",
+          "uv": [
+            3,
+            0,
+            13,
+            1
+          ]
+        },
+        "up": {
+          "texture": "#stone",
+          "uv": [
+            0,
+            3,
+            16,
+            13
+          ]
+        },
+        "down": {
+          "texture": "#stone",
+          "uv": [
+            0,
+            3,
+            16,
+            13
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        0,
+        15,
+        4.5
+      ],
+      "to": [
+        16,
+        16,
+        11.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#stone",
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ]
+        },
+        "south": {
+          "texture": "#stone",
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ]
+        },
+        "east": {
+          "texture": "#stone",
+          "uv": [
+            4,
+            0,
+            11,
+            1
+          ]
+        },
+        "west": {
+          "texture": "#stone",
+          "uv": [
+            4,
+            0,
+            11,
+            1
+          ]
+        },
+        "up": {
+          "texture": "#stone",
+          "uv": [
+            0,
+            4,
+            16,
+            11
+          ],
+          "cullface": "up"
+        }
+      }
+    }
+  ]
+}

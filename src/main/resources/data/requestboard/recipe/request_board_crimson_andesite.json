@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "request_board",
+  "key": {
+    "S": [
+      "minecraft:andesite_slab",
+      "minecraft:polished_andesite_slab"
+    ],
+    "P": "minecraft:crimson_planks",
+    "B": "minecraft:writable_book",
+    "F": "minecraft:crimson_fence"
+  },
+  "pattern": [
+    "SSS",
+    "PBP",
+    "F F"
+  ],
+  "result": {
+    "id": "requestboard:request_board",
+    "components": {
+      "minecraft:block_state": {
+        "wood": "crimson",
+        "roof": "andesite"
+      }
+    }
+  }
+}

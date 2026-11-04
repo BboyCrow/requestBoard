@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "request_board",
+  "key": {
+    "S": [
+      "minecraft:diorite_slab",
+      "minecraft:polished_diorite_slab"
+    ],
+    "P": "minecraft:oak_planks",
+    "B": "minecraft:writable_book",
+    "F": "minecraft:oak_fence"
+  },
+  "pattern": [
+    "SSS",
+    "PBP",
+    "F F"
+  ],
+  "result": {
+    "id": "requestboard:request_board",
+    "components": {
+      "minecraft:block_state": {
+        "wood": "oak",
+        "roof": "diorite"
+      }
+    }
+  }
+}

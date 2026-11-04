@@ -1,0 +1,1096 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "facing": "north",
+        "wood": "oak"
+      },
+      "apply": {
+        "model": "requestboard:block/board_oak"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "wood": "spruce"
+      },
+      "apply": {
+        "model": "requestboard:block/board_spruce"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "wood": "birch"
+      },
+      "apply": {
+        "model": "requestboard:block/board_birch"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "wood": "jungle"
+      },
+      "apply": {
+        "model": "requestboard:block/board_jungle"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "wood": "acacia"
+      },
+      "apply": {
+        "model": "requestboard:block/board_acacia"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "wood": "dark_oak"
+      },
+      "apply": {
+        "model": "requestboard:block/board_dark_oak"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "wood": "mangrove"
+      },
+      "apply": {
+        "model": "requestboard:block/board_mangrove"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "wood": "cherry"
+      },
+      "apply": {
+        "model": "requestboard:block/board_cherry"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "wood": "pale_oak"
+      },
+      "apply": {
+        "model": "requestboard:block/board_pale_oak"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "wood": "crimson"
+      },
+      "apply": {
+        "model": "requestboard:block/board_crimson"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "wood": "warped"
+      },
+      "apply": {
+        "model": "requestboard:block/board_warped"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "wood": "bamboo"
+      },
+      "apply": {
+        "model": "requestboard:block/board_bamboo"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "roof": "stone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_stone"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "roof": "cobblestone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_cobblestone"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "roof": "mossy_cobblestone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_mossy_cobblestone"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "roof": "stone_bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_stone_bricks"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "roof": "cobbled_deepslate"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_cobbled_deepslate"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "roof": "deepslate_bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_deepslate_bricks"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "roof": "blackstone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_blackstone"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "roof": "andesite"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_andesite"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "roof": "granite"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_granite"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "roof": "diorite"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_diorite"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "roof": "sandstone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_sandstone"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "roof": "red_sandstone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_red_sandstone"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "roof": "bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_bricks"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "roof": "mud_bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_mud_bricks"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "roof": "tuff"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_tuff"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "roof": "nether_bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_nether_bricks"
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "wood": "oak"
+      },
+      "apply": {
+        "model": "requestboard:block/board_oak",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "wood": "spruce"
+      },
+      "apply": {
+        "model": "requestboard:block/board_spruce",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "wood": "birch"
+      },
+      "apply": {
+        "model": "requestboard:block/board_birch",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "wood": "jungle"
+      },
+      "apply": {
+        "model": "requestboard:block/board_jungle",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "wood": "acacia"
+      },
+      "apply": {
+        "model": "requestboard:block/board_acacia",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "wood": "dark_oak"
+      },
+      "apply": {
+        "model": "requestboard:block/board_dark_oak",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "wood": "mangrove"
+      },
+      "apply": {
+        "model": "requestboard:block/board_mangrove",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "wood": "cherry"
+      },
+      "apply": {
+        "model": "requestboard:block/board_cherry",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "wood": "pale_oak"
+      },
+      "apply": {
+        "model": "requestboard:block/board_pale_oak",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "wood": "crimson"
+      },
+      "apply": {
+        "model": "requestboard:block/board_crimson",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "wood": "warped"
+      },
+      "apply": {
+        "model": "requestboard:block/board_warped",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "wood": "bamboo"
+      },
+      "apply": {
+        "model": "requestboard:block/board_bamboo",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "roof": "stone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_stone",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "roof": "cobblestone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_cobblestone",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "roof": "mossy_cobblestone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_mossy_cobblestone",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "roof": "stone_bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_stone_bricks",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "roof": "cobbled_deepslate"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_cobbled_deepslate",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "roof": "deepslate_bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_deepslate_bricks",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "roof": "blackstone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_blackstone",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "roof": "andesite"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_andesite",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "roof": "granite"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_granite",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "roof": "diorite"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_diorite",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "roof": "sandstone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_sandstone",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "roof": "red_sandstone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_red_sandstone",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "roof": "bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_bricks",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "roof": "mud_bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_mud_bricks",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "roof": "tuff"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_tuff",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "roof": "nether_bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_nether_bricks",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "wood": "oak"
+      },
+      "apply": {
+        "model": "requestboard:block/board_oak",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "wood": "spruce"
+      },
+      "apply": {
+        "model": "requestboard:block/board_spruce",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "wood": "birch"
+      },
+      "apply": {
+        "model": "requestboard:block/board_birch",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "wood": "jungle"
+      },
+      "apply": {
+        "model": "requestboard:block/board_jungle",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "wood": "acacia"
+      },
+      "apply": {
+        "model": "requestboard:block/board_acacia",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "wood": "dark_oak"
+      },
+      "apply": {
+        "model": "requestboard:block/board_dark_oak",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "wood": "mangrove"
+      },
+      "apply": {
+        "model": "requestboard:block/board_mangrove",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "wood": "cherry"
+      },
+      "apply": {
+        "model": "requestboard:block/board_cherry",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "wood": "pale_oak"
+      },
+      "apply": {
+        "model": "requestboard:block/board_pale_oak",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "wood": "crimson"
+      },
+      "apply": {
+        "model": "requestboard:block/board_crimson",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "wood": "warped"
+      },
+      "apply": {
+        "model": "requestboard:block/board_warped",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "wood": "bamboo"
+      },
+      "apply": {
+        "model": "requestboard:block/board_bamboo",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "roof": "stone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_stone",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "roof": "cobblestone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_cobblestone",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "roof": "mossy_cobblestone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_mossy_cobblestone",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "roof": "stone_bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_stone_bricks",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "roof": "cobbled_deepslate"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_cobbled_deepslate",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "roof": "deepslate_bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_deepslate_bricks",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "roof": "blackstone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_blackstone",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "roof": "andesite"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_andesite",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "roof": "granite"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_granite",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "roof": "diorite"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_diorite",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "roof": "sandstone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_sandstone",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "roof": "red_sandstone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_red_sandstone",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "roof": "bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_bricks",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "roof": "mud_bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_mud_bricks",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "roof": "tuff"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_tuff",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "roof": "nether_bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_nether_bricks",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "wood": "oak"
+      },
+      "apply": {
+        "model": "requestboard:block/board_oak",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "wood": "spruce"
+      },
+      "apply": {
+        "model": "requestboard:block/board_spruce",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "wood": "birch"
+      },
+      "apply": {
+        "model": "requestboard:block/board_birch",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "wood": "jungle"
+      },
+      "apply": {
+        "model": "requestboard:block/board_jungle",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "wood": "acacia"
+      },
+      "apply": {
+        "model": "requestboard:block/board_acacia",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "wood": "dark_oak"
+      },
+      "apply": {
+        "model": "requestboard:block/board_dark_oak",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "wood": "mangrove"
+      },
+      "apply": {
+        "model": "requestboard:block/board_mangrove",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "wood": "cherry"
+      },
+      "apply": {
+        "model": "requestboard:block/board_cherry",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "wood": "pale_oak"
+      },
+      "apply": {
+        "model": "requestboard:block/board_pale_oak",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "wood": "crimson"
+      },
+      "apply": {
+        "model": "requestboard:block/board_crimson",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "wood": "warped"
+      },
+      "apply": {
+        "model": "requestboard:block/board_warped",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "wood": "bamboo"
+      },
+      "apply": {
+        "model": "requestboard:block/board_bamboo",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "roof": "stone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_stone",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "roof": "cobblestone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_cobblestone",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "roof": "mossy_cobblestone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_mossy_cobblestone",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "roof": "stone_bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_stone_bricks",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "roof": "cobbled_deepslate"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_cobbled_deepslate",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "roof": "deepslate_bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_deepslate_bricks",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "roof": "blackstone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_blackstone",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "roof": "andesite"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_andesite",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "roof": "granite"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_granite",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "roof": "diorite"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_diorite",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "roof": "sandstone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_sandstone",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "roof": "red_sandstone"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_red_sandstone",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "roof": "bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_bricks",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "roof": "mud_bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_mud_bricks",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "roof": "tuff"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_tuff",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "roof": "nether_bricks"
+      },
+      "apply": {
+        "model": "requestboard:block/roof_nether_bricks",
+        "y": 270
+      }
+    }
+  ]
+}

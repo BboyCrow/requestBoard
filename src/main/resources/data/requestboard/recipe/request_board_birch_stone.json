@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "request_board",
+  "key": {
+    "S": [
+      "minecraft:stone_slab",
+      "minecraft:smooth_stone_slab"
+    ],
+    "P": "minecraft:birch_planks",
+    "B": "minecraft:writable_book",
+    "F": "minecraft:birch_fence"
+  },
+  "pattern": [
+    "SSS",
+    "PBP",
+    "F F"
+  ],
+  "result": {
+    "id": "requestboard:request_board",
+    "components": {
+      "minecraft:block_state": {
+        "wood": "birch",
+        "roof": "stone"
+      }
+    }
+  }
+}
