@@ -41,6 +41,16 @@ public final class Gfx {
 	}
 	*///?}
 
+	/**
+	 * Before 1.21.6 items are drawn in front of everything else (they sit at z=150), so they would show through
+	 * the detail scroll and the item picker. The screen sets this while drawing what lies under an overlay.
+	 */
+	//? if >=1.21.6 {
+	private static final boolean ITEMS_DRAWN_ON_TOP = false;
+	//?} else
+	/*private static final boolean ITEMS_DRAWN_ON_TOP = true;*/
+	public boolean underOverlay;
+
 	/** Tooltip to draw last (1.21.1 draws tooltips immediately, so they are deferred). */
 	private @Nullable Runnable pendingTooltip;
 
@@ -48,8 +58,11 @@ public final class Gfx {
 	public void blit(Identifier texture, int x, int y, int w, int h, int texW, int texH) {
 		//? if >=1.21.6 {
 		this.raw.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, 0, 0, w, h, texW, texH, texW, texH);
-		//?} else
-		/*this.raw.blit(texture, x, y, w, h, 0.0F, 0.0F, texW, texH, texW, texH);*/
+		//?} else {
+		/*// Text and fills are batched and drawn later; flush them so this image lands on top, in drawing order.
+		this.raw.flush();
+		this.raw.blit(texture, x, y, w, h, 0.0F, 0.0F, texW, texH, texW, texH);
+		*///?}
 	}
 
 	public void fill(int x0, int y0, int x1, int y1, int color) {
@@ -101,6 +114,7 @@ public final class Gfx {
 	}
 
 	public void item(ItemStack stack, int x, int y) {
+		if (ITEMS_DRAWN_ON_TOP && this.underOverlay) return;
 		//? if >=26.1 {
 		this.raw.item(stack, x, y);
 		//?} else
@@ -108,6 +122,7 @@ public final class Gfx {
 	}
 
 	public void itemDecorations(Font font, ItemStack stack, int x, int y) {
+		if (ITEMS_DRAWN_ON_TOP && this.underOverlay) return;
 		//? if >=26.1 {
 		this.raw.itemDecorations(font, stack, x, y);
 		//?} else
@@ -115,6 +130,7 @@ public final class Gfx {
 	}
 
 	public void itemDecorations(Font font, ItemStack stack, int x, int y, @Nullable String countText) {
+		if (ITEMS_DRAWN_ON_TOP && this.underOverlay) return;
 		//? if >=26.1 {
 		this.raw.itemDecorations(font, stack, x, y, countText);
 		//?} else

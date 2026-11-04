@@ -365,7 +365,7 @@ public class RequestBoardScreen extends Screen {
 			int px = this.left + (W - PW) / 2;
 			int py = this.top + (H - PH) / 2;
 			EditBox search = this.field(px + 20, py + 30, PW - 40, 16, Component.translatable("requestboard.picker.search"));
-			this.fieldHints.put(search, Component.translatable("requestboard.picker.search"));
+			this.hint(search, Component.translatable("requestboard.picker.search"));
 			search.setValue(this.pickerSearch);
 			search.setResponder(value -> {
 				this.pickerSearch = value;
@@ -395,7 +395,7 @@ public class RequestBoardScreen extends Screen {
 		if (cfg.timeLimit.enabled) {
 			EditBox duration = this.field(this.left + 270, this.top + 32, 50, 16, Component.translatable("requestboard.create.duration"));
 			duration.setMaxLength(6);
-			this.fieldHints.put(duration, Component.translatable("requestboard.create.duration_hint"));
+			this.hint(duration, Component.translatable("requestboard.create.duration_hint"));
 			duration.setValue(this.draftDuration);
 			duration.setResponder(value -> {
 				String digits = value.replaceAll("\\D", "");
@@ -410,7 +410,7 @@ public class RequestBoardScreen extends Screen {
 
 		EditBox title = this.field(x, this.top + 52, 300, 16, Component.translatable("requestboard.create.title"));
 		title.setMaxLength(cfg.maxTitleLength);
-		this.fieldHints.put(title, Component.translatable("requestboard.create.title_hint", cfg.maxTitleLength));
+		this.hint(title, Component.translatable("requestboard.create.title_hint", cfg.maxTitleLength));
 		title.setValue(this.draftTitle);
 		title.setResponder(value -> this.draftTitle = value);
 		this.addRenderableWidget(title);
@@ -426,10 +426,12 @@ public class RequestBoardScreen extends Screen {
 				.setTextShadow(false)
 				.setCursorColor(INK)
 				.build(this.font, 300, 34, Component.translatable("requestboard.create.details"));
-			//?} else
-			/*MultiLineEditBox details = new MultiLineEditBox(this.font, x, this.top + 72, 300, 34, Component.empty(), Component.translatable("requestboard.create.details"));*/
 			this.parchmentFields.add(details);
 			this.fieldHints.put(details, Component.translatable("requestboard.create.details_hint"));
+			//?} else {
+			/*MultiLineEditBox details = new MultiLineEditBox(this.font, x, this.top + 72, 300, 34,
+				Component.translatable("requestboard.create.details_hint"), Component.translatable("requestboard.create.details"));
+			*///?}
 			details.setCharacterLimit(cfg.maxDetailsLength);
 			details.setValue(this.draftDetails);
 			details.setValueListener(value -> this.draftDetails = value);
@@ -467,16 +469,28 @@ public class RequestBoardScreen extends Screen {
 		this.addRenderableWidget(publish);
 	}
 
-	/** A text field drawn as ink on light paper (frame painted by {@link #drawFields}). */
+	/**
+	 * A text field drawn as ink on light paper (frame painted by {@link #drawFields}).
+	 * Before 1.21.6 text always has a shadow, which blurs dark ink, so the vanilla dark field is kept there.
+	 */
 	private EditBox field(int x, int y, int w, int h, Component narration) {
+		//? if >=1.21.6 {
 		EditBox box = new EditBox(this.font, x + 4, y + (h - 8) / 2, w - 8, 9, narration);
 		box.setBordered(false);
-		//? if >=1.21.6
 		box.setTextShadow(false);
 		box.setTextColor(INK);
 		box.setTextColorUneditable(INK_SOFT);
 		this.parchmentFields.add(box);
+		//?} else
+		/*EditBox box = new EditBox(this.font, x, y, w, h, narration);*/
 		return box;
+	}
+
+	private void hint(EditBox box, Component hint) {
+		//? if >=1.21.6 {
+		this.fieldHints.put(box, hint);
+		//?} else
+		/*box.setHint(hint.copy().withStyle(ChatFormatting.DARK_GRAY));*/
 	}
 
 	private void drawFields(Gfx g) {
@@ -754,12 +768,14 @@ public class RequestBoardScreen extends Screen {
 		int mx = overlay ? -1 : mouseX;
 		int my = overlay ? -1 : mouseY;
 
+		g.underOverlay = overlay;
 		switch (this.tab) {
 			case BOARD -> this.renderBoard(g, mx, my, !overlay);
 			case CREATE -> this.renderCreate(g, mx, my, !overlay);
 			case MINE -> this.renderMine(g, mx, my, !overlay);
 		}
 
+		g.underOverlay = false;
 		if (selected != null && this.tab != Tab.CREATE) {
 			this.renderDetail(g, selected, mouseX, mouseY);
 		} else if (this.pickerOpen && this.tab == Tab.CREATE) {
