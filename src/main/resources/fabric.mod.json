@@ -4,10 +4,10 @@
 	"version": "${version}",
 	"name": "RequestBoard",
 	"description": "A shared notice board where players post announcements, services and harvest requests.",
-	"authors": ["ClementGen"],
+	"authors": ["BboyCrow"],
 	"contact": {
-		"sources": "https://github.com/ClementGen/requestBoard",
-		"issues": "https://github.com/ClementGen/requestBoard/issues"
+		"sources": "https://github.com/BboyCrow/requestBoard",
+		"issues": "https://github.com/BboyCrow/requestBoard/issues"
 	},
 	"license": "MIT",
 	"icon": "assets/requestboard/icon.png",
