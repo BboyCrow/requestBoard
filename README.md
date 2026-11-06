@@ -4,6 +4,8 @@ A shared notice board for Minecraft servers (Fabric — Minecraft **1.21.1**, **
 
 *Un tableau d'affichage partagé pour serveur Minecraft : chaque joueur publie ses annonces, services et demandes de récolte, et les autres les acceptent.*
 
+See [CHANGELOG.md](CHANGELOG.md) for the release history.
+
 ## Features
 
 - **Request Board block**: it takes the colour of the wood and stone used to craft it (12 woods × 16 stone roofs, all in their own creative tab). Boards facing the same way merge into one big board (2×2, 3×2…), and the pinned notes are laid out at random so a big board never looks repetitive.
@@ -59,7 +61,7 @@ F   F     B = book and quill
 | `maxAcceptors` | 0 | Players per request (0 = unlimited) |
 | `allowAcceptOwnRequest` | false | Accept your own request |
 | `operatorsCanRemoveAny` | true | Operators can delete any request |
-| `broadcastNewRequests` | true | Announce new requests in chat |
+| `broadcastNewRequests` | true | Announce new requests in every player's chat and in the server console |
 | `playSounds` | true | Sounds on board events |
 | `defaultStyle` | MODERN | Board look for players who haven't picked one: `MODERN` or `FANTASY` |
 | `rewards.textEnabled` | true | Allow a short text reward |
@@ -96,8 +98,12 @@ version-specific code sits in `//? if >=26.1 { ... }` comment blocks, and `src/`
 ./gradlew build                          # jars for every version in versions/<mc>/build/libs/
 ./gradlew :1.21.1:runClient              # dev client for one version
 ./gradlew :26.3:runClientGameTest        # automated UI test (1.21.11 and 26.3), screenshots in versions/<mc>/build/run/clientGameTest
+REQUESTBOARD_LANG=en_us ./gradlew :26.3:runClientGameTest   # same test with the game in English (default: fr_fr)
+REQUESTBOARD_GALLERY=1 ./gradlew :26.3:runClientGameTest    # also takes the Modrinth gallery screenshots (1920x1080, English)
 python tools/generate_assets.py          # regenerates models, textures and the per-version data in generated/<mc>/ (needs Pillow)
 ```
+
+Check UI changes in **both English and French**: French strings are often longer.
 
 To edit code for another version, run the Gradle task `"Set active project to 1.21.1"` (Stonecutter group), work, then switch back to 26.3 before committing.
 
