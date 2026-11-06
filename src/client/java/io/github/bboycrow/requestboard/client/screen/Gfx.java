@@ -157,6 +157,13 @@ public final class Gfx {
 		/*this.pendingTooltip = () -> this.raw.renderComponentTooltip(font, lines, x, y);*/
 	}
 
+	public void setTooltipLines(Font font, List<FormattedCharSequence> lines, int x, int y) {
+		//? if >=1.21.6 {
+		this.raw.setTooltipForNextFrame(font, lines, x, y);
+		//?} else
+		/*this.pendingTooltip = () -> this.raw.renderTooltip(font, lines, x, y);*/
+	}
+
 	public void enableScissor(int x0, int y0, int x1, int y1) {
 		this.raw.enableScissor(x0, y0, x1, y1);
 	}

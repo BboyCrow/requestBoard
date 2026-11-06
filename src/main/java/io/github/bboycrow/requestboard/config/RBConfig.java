@@ -22,6 +22,9 @@ public class RBConfig {
 
 	public enum RemainderMode { RANDOM, FIRST_COME, CREATOR }
 
+	/** How withdrawn rewards are shared on close. */
+	public enum SplitMode { EVEN, PRORATA }
+
 	public static class Categories {
 		public boolean announcement = true;
 		public boolean service = true;
@@ -33,7 +36,28 @@ public class RBConfig {
 		public boolean autoWithdraw = true;
 		public boolean autoDispatch = true;
 		public RemainderMode remainderMode = RemainderMode.RANDOM;
+		public SplitMode splitMode = SplitMode.EVEN;
 		public int maxRewardStacks = 9;
+		public boolean textEnabled = true;
+		public int maxTextLength = 60;
+	}
+
+	/** What the creator of a request may change afterwards. */
+	public static class Editing {
+		public boolean enabled = true;
+		public boolean category = true;
+		public boolean title = true;
+		public boolean details = true;
+		public boolean objectives = true;
+		public boolean rewards = true;
+		public boolean timeLimit = true;
+	}
+
+	/** Players who accepted a request can say how much of each item they have (informative only). */
+	public static class Contributions {
+		public boolean enabled = true;
+		public boolean creatorStock = true;
+		public boolean creatorCanAdjust = true;
 	}
 
 	public static class TimeLimit {
@@ -59,6 +83,8 @@ public class RBConfig {
 	public Categories categories = new Categories();
 	public Rewards rewards = new Rewards();
 	public TimeLimit timeLimit = new TimeLimit();
+	public Editing editing = new Editing();
+	public Contributions contributions = new Contributions();
 
 	private static RBConfig instance = new RBConfig();
 
@@ -69,6 +95,27 @@ public class RBConfig {
 	/** Replaces the active config (used client-side when the server syncs its config). */
 	public static void set(RBConfig config) {
 		instance = config.sanitized();
+	}
+
+	/** Replaces the active config and writes it to disk (server side, from the in-game editor). */
+	public static RBConfig replaceAndSave(RBConfig config) {
+		instance = config.sanitized();
+		instance.save();
+		return instance;
+	}
+
+	/** A detached copy, safe to edit without touching the active config. */
+	public RBConfig copy() {
+		return fromJson(this.toJson());
+	}
+
+	public boolean canEditAnything() {
+		return this.editing.enabled && (this.editing.category || this.editing.title || this.editing.details
+			|| this.editing.objectives || this.editing.rewards || this.editing.timeLimit);
+	}
+
+	public boolean textRewardsEnabled() {
+		return this.rewards.textEnabled;
 	}
 
 	public boolean isCategoryEnabled(Category category) {
@@ -105,7 +152,10 @@ public class RBConfig {
 		if (this.categories == null) this.categories = new Categories();
 		if (this.rewards == null) this.rewards = new Rewards();
 		if (this.rewards.remainderMode == null) this.rewards.remainderMode = RemainderMode.RANDOM;
+		if (this.rewards.splitMode == null) this.rewards.splitMode = SplitMode.EVEN;
 		if (this.timeLimit == null) this.timeLimit = new TimeLimit();
+		if (this.editing == null) this.editing = new Editing();
+		if (this.contributions == null) this.contributions = new Contributions();
 		if (this.defaultStyle == null) this.defaultStyle = "MODERN";
 		this.maxTitleLength = clamp(this.maxTitleLength, 8, 128);
 		this.maxDetailsLength = clamp(this.maxDetailsLength, 0, 2000);
@@ -115,6 +165,9 @@ public class RBConfig {
 		this.maxAcceptors = Math.max(0, this.maxAcceptors);
 		this.rewards.maxRewardStacks = clamp(this.rewards.maxRewardStacks, 1, 9);
 		this.timeLimit.maxMinutes = Math.max(0, this.timeLimit.maxMinutes);
+		this.rewards.maxTextLength = clamp(this.rewards.maxTextLength, 8, 200);
+		this.defaultStyle = this.defaultStyle.trim().toUpperCase(java.util.Locale.ROOT);
+		if (!"MODERN".equals(this.defaultStyle) && !"FANTASY".equals(this.defaultStyle)) this.defaultStyle = "MODERN";
 		if (!this.categories.announcement && !this.categories.service && !this.categories.harvest) {
 			this.categories.harvest = true;
 		}
@@ -174,8 +227,16 @@ public class RBConfig {
 		help.put("rewards.enabled", "Allow rewards (items from the creator's inventory only).");
 		help.put("rewards.autoWithdraw", "Take reward items from the creator's inventory when the request is posted. If false, rewards are only shown and handed over manually.");
 		help.put("rewards.autoDispatch", "When the creator closes the request, split the withdrawn rewards evenly between everyone who accepted it. Ignored if autoWithdraw is false. If false, rewards return to the creator.");
+		help.put("rewards.splitMode", "EVEN: equal shares. PRORATA: shares in proportion to what each participant declared in their contribution (participants who declared nothing get nothing; equal shares if nobody declared anything).");
 		help.put("rewards.remainderMode", "Who gets the leftover items when the split is uneven: RANDOM, FIRST_COME (earliest acceptors) or CREATOR (back to the creator).");
 		help.put("rewards.maxRewardStacks", "Max reward stacks per request (1-9).");
+		help.put("rewards.textEnabled", "Allow a short text reward (e.g. \"a free house build\"), shown on the request. Not handed out automatically.");
+		help.put("rewards.maxTextLength", "Max characters of the text reward (8-200).");
+		help.put("editing.enabled", "Let the creator edit their request after posting it (Edit button in the request view).");
+		help.put("editing.category / title / details / objectives / rewards / timeLimit", "Which parts of a request can be edited. Changing rewards returns the old withdrawn items and takes the new ones. The time limit can be changed, added or removed.");
+		help.put("contributions.creatorStock", "The creator can say how many of each item they already have; it counts in the progress.");
+		help.put("contributions.creatorCanAdjust", "The creator can correct each participant's contribution (marked as confirmed).");
+		help.put("contributions.enabled", "Players who accepted a request can say how many of each requested item they have, so everyone sees what is still missing. Informative only: nothing is taken from their inventory.");
 		help.put("timeLimit.enabled", "Allow requests with a time limit; they disappear when it runs out and rewards go back to the creator.");
 		help.put("timeLimit.maxMinutes", "Longest allowed time limit in minutes (0 = no maximum).");
 		return help;

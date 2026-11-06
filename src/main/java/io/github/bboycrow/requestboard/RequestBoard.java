@@ -110,6 +110,10 @@ public class RequestBoard implements ModInitializer {
 			(payload, context) -> RequestManager.create(context.player(), payload));
 		ServerPlayNetworking.registerGlobalReceiver(RBPayloads.RequestAction.TYPE,
 			(payload, context) -> RequestManager.handleAction(context.player(), payload.requestId(), payload.action()));
+		ServerPlayNetworking.registerGlobalReceiver(RBPayloads.UpdateContribution.TYPE,
+			(payload, context) -> RequestManager.updateContribution(context.player(), payload.requestId(), payload.target(), payload.contribution()));
+		ServerPlayNetworking.registerGlobalReceiver(RBPayloads.SaveConfig.TYPE,
+			(payload, context) -> RequestManager.saveConfig(context.player(), payload.json()));
 
 		ServerPlayConnectionEvents.JOIN.register((listener, sender, server) -> RequestManager.onJoin(listener.getPlayer()));
 		ServerTickEvents.END_SERVER_TICK.register(RequestManager::tick);
@@ -124,6 +128,10 @@ public class RequestBoard implements ModInitializer {
 					RBConfig.load();
 					RequestManager.broadcastConfig(ctx.getSource().getServer());
 					ctx.getSource().sendSuccess(() -> Component.translatable("requestboard.msg.config_reloaded"), true);
+					return 1;
+				}))
+				.then(Commands.literal("config").executes(ctx -> {
+					RequestManager.openConfigEditor(ctx.getSource().getPlayerOrException());
 					return 1;
 				}))));
 

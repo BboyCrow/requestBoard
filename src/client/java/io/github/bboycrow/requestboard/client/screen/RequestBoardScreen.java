@@ -69,10 +69,10 @@ public class RequestBoardScreen extends Screen {
 	private static final int LW = 328;
 	private static final int LH = 228;
 
-	private static final int CARD_H = 62;
-	private static final int CARD_GAP = 6;
+	private static final int CARD_H = 64;
+	private static final int CARD_GAP = 4;
 	private static final int ROW_H = 28;
-	private static final int OBJ_ROWS = 5;
+	private static final int OBJ_ROWS = 4;
 	private static final int PICKER_COLS = 12;
 	private static final int PICKER_ROWS = 7;
 
@@ -145,6 +145,34 @@ public class RequestBoardScreen extends Screen {
 	private @Nullable Component createMessage;
 	private boolean createMessageIsError;
 	private boolean waitingForServer;
+	private String draftRewardText = "";
+	/** Request being edited, or null when creating a new one. */
+	private @Nullable UUID editingId;
+	/** When editing: true once the creator chose to replace the current item rewards. */
+	private boolean replaceRewards;
+	/** Set once the creator changed the time limit while editing (otherwise it is kept). */
+	private boolean durationTouched;
+	/** Request whose contribution panel is open (the player's own declared amounts). */
+	private @Nullable UUID contributionId;
+	/** Whose amounts the panel edits: the player, the creator's own stock, or a participant. */
+	private @Nullable UUID contributionTarget;
+	private final Map<Integer, String> contributionDrafts = new HashMap<>();
+	private int contributionScroll;
+	private static final int CONTRIB_ROWS = 5;
+
+	/** Rows shown in the contribution panel: one fewer when a scroll counter is needed. */
+	private static int contributionRows(int items) {
+		return items > CONTRIB_ROWS ? CONTRIB_ROWS - 1 : CONTRIB_ROWS;
+	}
+	/** Scroll of the request view body (details, objective, reward, participants). */
+	private double detailScroll;
+	private int detailMaxScroll;
+	/** Reward section shows the text tab instead of the item tab. */
+	private boolean rewardTextTab;
+	/** Before 1.21.6: counters drawn inside the vanilla text areas (their own counter is drawn below and overlaps). */
+	private final Map<AbstractWidget, java.util.function.Supplier<String>> legacyCounters = new HashMap<>();
+	/** Character counters drawn inside parchment text areas. */
+	private final Map<AbstractWidget, java.util.function.Supplier<String>> fieldCounters = new HashMap<>();
 
 	// Item picker
 	private boolean pickerOpen;
@@ -182,6 +210,10 @@ public class RequestBoardScreen extends Screen {
 		if (this.filterPlayer != null && ClientBoardState.requests().stream().noneMatch(r -> r.creatorName().equals(this.filterPlayer))) {
 			this.filterPlayer = null;
 		}
+		if (this.editingId != null && ClientBoardState.find(this.editingId) == null) {
+			this.clearDraft();
+			this.setCreateError(Component.translatable("requestboard.error.not_found"));
+		}
 		this.rebuildWidgets();
 	}
 
@@ -195,12 +227,7 @@ public class RequestBoardScreen extends Screen {
 	public void onCreateResult(boolean success, Component message) {
 		this.waitingForServer = false;
 		if (success) {
-			this.draftTitle = "";
-			this.draftDetails = "";
-			this.draftDuration = "";
-			this.draftObjectives.clear();
-			this.draftRewards.clear();
-			this.objectiveScroll = 0;
+			this.clearDraft();
 			this.createMessage = null;
 			this.boardMessage = message;
 			this.boardMessageUntil = System.currentTimeMillis() + 4000;
@@ -221,6 +248,8 @@ public class RequestBoardScreen extends Screen {
 
 		this.parchmentFields.clear();
 		this.fieldHints.clear();
+		this.fieldCounters.clear();
+		this.legacyCounters.clear();
 		int tx = this.left + 2;
 		for (Tab t : Tab.values()) {
 			Button button = this.addRenderableWidget(Button.builder(tabLabel(t), b -> this.switchTab(t))
@@ -236,7 +265,14 @@ public class RequestBoardScreen extends Screen {
 			.build());
 
 		if (this.selectedId != null && ClientBoardState.find(this.selectedId) != null && this.tab != Tab.CREATE) {
-			this.initDetailButtons(ClientBoardState.find(this.selectedId));
+			BoardRequest selected = ClientBoardState.find(this.selectedId);
+			if (selected.id().equals(this.contributionId) && this.contributionTarget != null
+				&& this.contributionTargets(selected).contains(this.contributionTarget)) {
+				this.initContribution(selected);
+			} else {
+				this.contributionId = null;
+				this.initDetailButtons(selected);
+			}
 			return;
 		}
 		switch (this.tab) {
@@ -245,6 +281,63 @@ public class RequestBoardScreen extends Screen {
 			case MINE -> {
 			}
 		}
+	}
+
+	private void clearDraft() {
+		this.editingId = null;
+		this.replaceRewards = false;
+		this.draftCategory = firstEnabledCategory();
+		this.draftTitle = "";
+		this.draftDetails = "";
+		this.draftDuration = "";
+		this.draftRewardText = "";
+		this.draftObjectives.clear();
+		this.draftRewards.clear();
+		this.objectiveScroll = 0;
+		this.rewardTextTab = false;
+		this.durationTouched = false;
+	}
+
+	/** Opens the creation page filled with an existing request, in edit mode. */
+	private void startEdit(BoardRequest request) {
+		this.clearDraft();
+		this.editingId = request.id();
+		this.draftCategory = request.category();
+		this.draftTitle = request.title();
+		this.draftDetails = request.details();
+		this.draftRewardText = request.rewardText();
+		this.rewardTextTab = request.rewards().isEmpty() && !request.rewardText().isEmpty();
+		// Nothing offered yet: the inventory is shown straight away, there is nothing to keep.
+		this.replaceRewards = request.rewards().isEmpty();
+		if (request.hasTimeLimit()) {
+			long left = Math.max(0, request.expiresAt() - ClientBoardState.now());
+			this.draftDuration = Long.toString(Math.max(1, (left + 59_999) / 60_000));
+		}
+		for (ObjectiveEntry entry : request.objectives()) {
+			this.draftObjectives.add(new ObjectiveDraft(entry.item(), Integer.toString(entry.count())));
+		}
+		this.selectedId = null;
+		this.pickerOpen = false;
+		this.createMessage = null;
+		this.tab = Tab.CREATE;
+		this.rebuildWidgets();
+	}
+
+	private RBConfig.Editing editRules() {
+		return cfg().editing;
+	}
+
+	private boolean canEditCategory() { return this.editingId == null || this.editRules().category; }
+	private boolean canEditTitle() { return this.editingId == null || this.editRules().title; }
+	private boolean canEditDetails() { return this.editingId == null || this.editRules().details; }
+	private boolean canEditObjectives() { return this.editingId == null || this.editRules().objectives; }
+	private boolean canEditRewards() { return this.editingId == null || this.editRules().rewards; }
+
+	/** Whether the duration field is shown on the creation/edit page. */
+	private boolean showsDuration() {
+		if (this.editingId == null) return cfg().timeLimit.enabled;
+		BoardRequest edited = ClientBoardState.find(this.editingId);
+		return this.editRules().timeLimit && (cfg().timeLimit.enabled || (edited != null && edited.hasTimeLimit()));
 	}
 
 	private Component tabLabel(Tab t) {
@@ -256,8 +349,12 @@ public class RequestBoardScreen extends Screen {
 	}
 
 	private void switchTab(Tab t) {
+		if (this.editingId != null) {
+			this.clearDraft();
+		}
 		this.tab = t;
 		this.selectedId = null;
+		this.contributionId = null;
 		this.pickerOpen = false;
 		this.rebuildWidgets();
 	}
@@ -316,6 +413,9 @@ public class RequestBoardScreen extends Screen {
 		boolean isOp = this.minecraft.player != null && Compat.isOperator(this.minecraft.player);
 
 		List<Button> buttons = new ArrayList<>();
+		if (accepted && cfg().contributions.enabled && !request.objectives().isEmpty()) {
+			buttons.add(Button.builder(Component.translatable("requestboard.action.contribute"), b -> this.openContribution(request, this.myId())).width(80).build());
+		}
 		if (accepted) {
 			buttons.add(Button.builder(Component.translatable("requestboard.action.leave"),
 				b -> this.sendAction(request, RBPayloads.Action.LEAVE)).width(70).build());
@@ -325,6 +425,9 @@ public class RequestBoardScreen extends Screen {
 			accept.active = cfg().maxAcceptors <= 0 || request.acceptors().size() < cfg().maxAcceptors;
 			buttons.add(accept);
 		}
+		if (isCreator && cfg().canEditAnything()) {
+			buttons.add(Button.builder(Component.translatable("requestboard.action.edit"), b -> this.startEdit(request)).width(62).build());
+		}
 		if (isCreator) {
 			buttons.add(confirmButton(request, RBPayloads.Action.CLOSE, "requestboard.action.close"));
 		}
@@ -333,6 +436,16 @@ public class RequestBoardScreen extends Screen {
 		}
 		buttons.add(Button.builder(Component.translatable("requestboard.action.back"), b -> this.closeDetail()).width(56).build());
 
+		if (isCreator && !this.contributionTargets(request).isEmpty()) {
+			this.addRenderableWidget(Button.builder(Component.translatable("requestboard.action.manage_contributions"),
+				b -> this.openContribution(request, this.contributionTargets(request).getFirst()))
+				.bounds(px + (PW - 120) / 2, py + PH - 54, 120, 16).build());
+		}
+		int room = PW - 24 - 4 * (buttons.size() - 1);
+		if (buttons.stream().mapToInt(Button::getWidth).sum() > room) {
+			int each = room / buttons.size();
+			buttons.forEach(button -> button.setWidth(each));
+		}
 		int total = buttons.stream().mapToInt(Button::getWidth).sum() + 4 * (buttons.size() - 1);
 		int bx = px + (PW - total) / 2;
 		for (Button button : buttons) {
@@ -341,6 +454,143 @@ public class RequestBoardScreen extends Screen {
 			this.addRenderableWidget(button);
 			bx += button.getWidth() + 4;
 		}
+	}
+
+	/** Whose amounts the current player may edit on this request. */
+	private List<UUID> contributionTargets(BoardRequest r) {
+		RBConfig cfg = cfg();
+		List<UUID> targets = new ArrayList<>();
+		if (!cfg.contributions.enabled || r.objectives().isEmpty()) return targets;
+		UUID me = this.myId();
+		if (r.creator().equals(me)) {
+			if (cfg.contributions.creatorStock) targets.add(me);
+			if (cfg.contributions.creatorCanAdjust) {
+				for (Acceptor acceptor : r.acceptors()) {
+					if (!acceptor.id().equals(me)) targets.add(acceptor.id());
+				}
+			}
+		} else if (r.isAcceptedBy(me)) {
+			targets.add(me);
+		}
+		return targets;
+	}
+
+	private int declaredBy(BoardRequest r, UUID target, ObjectiveEntry wanted) {
+		if (target.equals(r.creator())) {
+			return BoardRequest.amountIn(r.ownStock(), wanted);
+		}
+		Acceptor acceptor = r.acceptors().stream().filter(a -> a.id().equals(target)).findFirst().orElse(null);
+		return acceptor == null ? 0 : acceptor.amountFor(wanted.item());
+	}
+
+	private Component targetLabel(BoardRequest r, UUID target) {
+		if (target.equals(r.creator())) {
+			return Component.translatable("requestboard.contribution.for_stock");
+		}
+		Acceptor acceptor = r.acceptors().stream().filter(a -> a.id().equals(target)).findFirst().orElse(null);
+		String name = acceptor == null ? "?" : acceptor.name() + (acceptor.confirmed() ? " ✔" : "");
+		return Component.translatable("requestboard.contribution.for_player", name);
+	}
+
+	private void openContribution(BoardRequest request, UUID target) {
+		this.contributionId = request.id();
+		this.contributionTarget = target;
+		this.contributionScroll = 0;
+		this.contributionDrafts.clear();
+		for (int i = 0; i < request.objectives().size(); i++) {
+			int amount = this.declaredBy(request, target, request.objectives().get(i));
+			this.contributionDrafts.put(i, amount > 0 ? Integer.toString(amount) : "");
+		}
+		this.rebuildWidgets();
+	}
+
+	private void initContribution(BoardRequest request) {
+		int px = this.left + (W - PW) / 2;
+		int py = this.top + (H - PH) / 2;
+		List<ObjectiveEntry> objectives = request.objectives();
+		UUID target = this.contributionTarget;
+		if (request.creator().equals(this.myId())) {
+			List<UUID> targets = this.contributionTargets(request);
+			Button selector = this.addRenderableWidget(Button.builder(this.targetLabel(request, target), b -> {
+				int next = (targets.indexOf(this.contributionTarget) + 1) % targets.size();
+				this.openContribution(request, targets.get(next));
+			}).bounds(px + 40, py + 39, PW - 80, 14).build());
+			selector.active = targets.size() > 1;
+		}
+		int rows = contributionRows(objectives.size());
+		this.contributionScroll = Math.max(0, Math.min(this.contributionScroll, Math.max(0, objectives.size() - rows)));
+		for (int row = 0; row < rows && row + this.contributionScroll < objectives.size(); row++) {
+			int index = row + this.contributionScroll;
+			int max = objectives.get(index).count();
+			EditBox box = this.field(px + 150, py + 58 + row * 20, 46, 16, Component.translatable("requestboard.create.amount"));
+			box.setMaxLength(7);
+			this.hint(box, Component.literal("0"));
+			box.setValue(this.contributionDrafts.getOrDefault(index, ""));
+			box.setResponder(value -> {
+				String digits = value.replaceAll("\\D", "");
+				if (!digits.isEmpty() && Integer.parseInt(digits.length() > 7 ? "9999999" : digits) > max) digits = Integer.toString(max);
+				if (!digits.equals(value)) {
+					box.setValue(digits);
+					return;
+				}
+				this.contributionDrafts.put(index, digits);
+			});
+			this.addRenderableWidget(box);
+		}
+		this.addRenderableWidget(Button.builder(Component.translatable("requestboard.create.save"), b -> {
+			List<ObjectiveEntry> declared = new ArrayList<>();
+			for (int i = 0; i < objectives.size(); i++) {
+				int amount = parse(this.contributionDrafts.getOrDefault(i, ""));
+				if (amount > 0 && amount != Integer.MAX_VALUE) declared.add(new ObjectiveEntry(objectives.get(i).item(), amount));
+			}
+			ClientPlayNetworking.send(new RBPayloads.UpdateContribution(request.id(), target, declared));
+			this.contributionId = null;
+			this.rebuildWidgets();
+		}).bounds(px + PW / 2 - 74, py + PH - 34, 72, 16).build());
+		this.addRenderableWidget(Button.builder(Component.translatable("requestboard.action.back"), b -> {
+			this.contributionId = null;
+			this.rebuildWidgets();
+		}).bounds(px + PW / 2 + 2, py + PH - 34, 72, 16).build());
+	}
+
+	private void renderContribution(Gfx g, BoardRequest r, int mouseX, int mouseY) {
+		g.fill(this.left, this.top, this.left + W, this.top + H, 0xA0000000);
+		int px = this.left + (W - PW) / 2;
+		int py = this.top + (H - PH) / 2;
+		g.blit(PARCHMENT_TEX, px, py, PW, PH, PW, PH);
+		this.drawFields(g);
+		boolean creator = r.creator().equals(this.myId());
+		Component title = Component.translatable(creator ? "requestboard.contribution.title_creator" : "requestboard.contribution.title").withStyle(ChatFormatting.BOLD);
+		g.text(this.font, title, px + (PW - this.font.width(title)) / 2, py + 18, INK, false);
+		FormattedCharSequence sub = this.truncate(Component.literal(r.title()), PW - 40);
+		g.text(this.font, sub, px + (PW - this.font.width(sub)) / 2, py + 29, INK_SOFT, false);
+		if (!creator) {
+			g.text(this.font, Component.translatable("requestboard.contribution.hint"), px + 20, py + 44, INK_SOFT, false);
+		}
+		List<ObjectiveEntry> objectives = r.objectives();
+		int rows = contributionRows(objectives.size());
+		for (int row = 0; row < rows && row + this.contributionScroll < objectives.size(); row++) {
+			ObjectiveEntry wanted = objectives.get(row + this.contributionScroll);
+			int ry = py + 58 + row * 20;
+			ItemStack stack = wanted.displayStack();
+			g.item(stack, px + 20, ry);
+			if (mouseX >= px + 20 && mouseX < px + 36 && mouseY >= ry && mouseY < ry + 16) {
+				g.setTooltipForNextFrame(this.font, stack, mouseX, mouseY);
+			}
+			g.text(this.font, this.ellipsis(stack.getHoverName().getString(), 104), px + 40, ry + 4, INK, false);
+			g.text(this.font, "/ " + wanted.count(), px + 200, ry + 4, INK_SOFT, false);
+		}
+		int noteY = py + 58 + Math.min(rows, objectives.size()) * 20 + 4;
+		if (objectives.size() > rows) {
+			Component pos = Component.translatable("requestboard.create.objective_scroll", this.contributionScroll + 1,
+				Math.min(objectives.size(), this.contributionScroll + rows), objectives.size());
+			g.text(this.font, this.truncate(pos, PW - 40), px + 20, noteY - 2, INK_SOFT, false);
+			noteY += 10;
+		}
+		Component note = Component.translatable(creator
+			? (r.creator().equals(this.contributionTarget) ? "requestboard.contribution.note_stock" : "requestboard.contribution.note_adjust")
+			: "requestboard.contribution.note");
+		g.textWithWordWrap(this.font, note, px + 20, noteY, PW - 40, INK_SOFT, false);
 	}
 
 	private Button confirmButton(BoardRequest request, RBPayloads.Action action, String key) {
@@ -383,7 +633,7 @@ public class RequestBoardScreen extends Screen {
 		}
 
 		int x = this.left + 20;
-		this.addRenderableWidget(Button.builder(Component.translatable("requestboard.create.category", Component.translatable(this.draftCategory.translationKey())), b -> {
+		Button categoryButton = this.addRenderableWidget(Button.builder(Component.translatable("requestboard.create.category", Component.translatable(this.draftCategory.translationKey())), b -> {
 			Category next = this.draftCategory;
 			do {
 				next = Category.values()[(next.ordinal() + 1) % Category.values().length];
@@ -391,8 +641,9 @@ public class RequestBoardScreen extends Screen {
 			this.draftCategory = next;
 			this.rebuildWidgets();
 		}).bounds(x, this.top + 32, 140, 16).build());
+		categoryButton.active = this.canEditCategory();
 
-		if (cfg.timeLimit.enabled) {
+		if (this.showsDuration()) {
 			EditBox duration = this.field(this.left + 270, this.top + 32, 50, 16, Component.translatable("requestboard.create.duration"));
 			duration.setMaxLength(6);
 			this.hint(duration, Component.translatable("requestboard.create.duration_hint"));
@@ -404,6 +655,7 @@ public class RequestBoardScreen extends Screen {
 					return;
 				}
 				this.draftDuration = digits;
+				this.durationTouched = true;
 			});
 			this.addRenderableWidget(duration);
 		}
@@ -413,6 +665,7 @@ public class RequestBoardScreen extends Screen {
 		this.hint(title, Component.translatable("requestboard.create.title_hint", cfg.maxTitleLength));
 		title.setValue(this.draftTitle);
 		title.setResponder(value -> this.draftTitle = value);
+		title.setEditable(this.canEditTitle());
 		this.addRenderableWidget(title);
 
 		if (cfg.maxDetailsLength > 0) {
@@ -428,13 +681,14 @@ public class RequestBoardScreen extends Screen {
 				.build(this.font, 300, 34, Component.translatable("requestboard.create.details"));
 			this.parchmentFields.add(details);
 			this.fieldHints.put(details, Component.translatable("requestboard.create.details_hint"));
+			this.fieldCounters.put(details, () -> this.draftDetails.length() + "/" + cfg().maxDetailsLength);
 			//?} else {
 			/*MultiLineEditBox details = new MultiLineEditBox(this.font, x, this.top + 72, 300, 34,
 				Component.translatable("requestboard.create.details_hint"), Component.translatable("requestboard.create.details"));
 			*///?}
-			details.setCharacterLimit(cfg.maxDetailsLength);
 			details.setValue(this.draftDetails);
-			details.setValueListener(value -> this.draftDetails = value);
+			this.limitText(details, cfg.maxDetailsLength, value -> this.draftDetails = value);
+			details.active = this.canEditDetails();
 			this.addRenderableWidget(details);
 		}
 
@@ -443,7 +697,7 @@ public class RequestBoardScreen extends Screen {
 			this.pickerScroll = 0;
 			this.rebuildWidgets();
 		}).bounds(this.left + 112, this.top + 110, 58, 14).build();
-		add.active = this.draftObjectives.size() < cfg.maxObjectiveEntries;
+		add.active = this.draftObjectives.size() < cfg.maxObjectiveEntries && this.canEditObjectives();
 		this.addRenderableWidget(add);
 
 		this.objectiveScroll = Math.max(0, Math.min(this.objectiveScroll, Math.max(0, this.draftObjectives.size() - OBJ_ROWS)));
@@ -460,13 +714,107 @@ public class RequestBoardScreen extends Screen {
 				}
 				draft.count = digits;
 			});
+			count.setEditable(this.canEditObjectives());
 			this.addRenderableWidget(count);
 		}
 
-		Button publish = Button.builder(Component.translatable("requestboard.create.publish"), b -> this.submit())
+		this.initRewardSection(cfg);
+
+		boolean editing = this.editingId != null;
+		if (editing) {
+			this.addRenderableWidget(Button.builder(Component.translatable("requestboard.action.cancel"), b -> {
+				UUID id = this.editingId;
+				this.clearDraft();
+				this.tab = Tab.BOARD;
+				this.selectedId = id;
+				this.rebuildWidgets();
+			}).bounds(this.left + 188, this.top + 208, 64, 16).build());
+		}
+		Button publish = Button.builder(Component.translatable(editing ? "requestboard.create.save" : "requestboard.create.publish"), b -> this.submit())
 			.bounds(this.left + 256, this.top + 208, 64, 16).build();
 		publish.active = !this.waitingForServer;
 		this.addRenderableWidget(publish);
+	}
+
+	/** Applies a character limit to a text area and reports its value. */
+	private void limitText(MultiLineEditBox box, int limit, java.util.function.Consumer<String> sink) {
+		//? if >=1.21.6 {
+		box.setCharacterLimit(limit);
+		box.setValueListener(sink);
+		//?} else {
+		/*// The vanilla limit draws "x/y" under the box, over the next widgets: enforce it here instead.
+		box.setValueListener(value -> {
+			if (value.length() > limit) {
+				box.setValue(value.substring(0, limit));
+				return;
+			}
+			sink.accept(value);
+		});
+		this.legacyCounters.put(box, () -> box.getValue().length() + "/" + limit);
+		*///?}
+	}
+
+	private void drawLegacyCounters(Gfx g) {
+		for (Map.Entry<AbstractWidget, java.util.function.Supplier<String>> entry : this.legacyCounters.entrySet()) {
+			AbstractWidget w = entry.getKey();
+			String text = entry.getValue().get();
+			g.text(this.font, text, w.getX() + w.getWidth() - this.font.width(text) - 5, w.getY() + w.getHeight() - 11, 0xFF8A8A8A, false);
+		}
+	}
+
+	private boolean showsTextTab(RBConfig cfg) {
+		if (!cfg.rewards.textEnabled) return false;
+		return this.rewardTextTab || !cfg.rewards.enabled;
+	}
+
+	/** Reward section: "Items | Text" tabs, the text area, and the keep/replace switch when editing. */
+	private void initRewardSection(RBConfig cfg) {
+		int rx = this.left + 180;
+		boolean both = cfg.rewards.enabled && cfg.rewards.textEnabled;
+		if (both) {
+			Button items = this.addRenderableWidget(Button.builder(Component.translatable("requestboard.create.tab_items"), b -> {
+				this.rewardTextTab = false;
+				this.rebuildWidgets();
+			}).bounds(this.left + 244, this.top + 110, 39, 14).build());
+			Button text = this.addRenderableWidget(Button.builder(Component.translatable("requestboard.create.tab_text"), b -> {
+				this.rewardTextTab = true;
+				this.rebuildWidgets();
+			}).bounds(this.left + 285, this.top + 110, 39, 14).build());
+			items.active = this.rewardTextTab;
+			text.active = !this.rewardTextTab;
+		}
+		if (this.showsTextTab(cfg)) {
+			//? if >=1.21.6 {
+			MultiLineEditBox area = MultiLineEditBox.builder()
+				.setX(rx)
+				.setY(this.top + 136)
+				.setShowBackground(false)
+				.setShowDecorations(false)
+				.setTextColor(INK)
+				.setTextShadow(false)
+				.setCursorColor(INK)
+				.build(this.font, 144, 40, Component.translatable("requestboard.create.reward_text"));
+			this.parchmentFields.add(area);
+			this.fieldHints.put(area, Component.translatable("requestboard.create.reward_text_hint"));
+			this.fieldCounters.put(area, () -> this.draftRewardText.length() + "/" + cfg().rewards.maxTextLength);
+			//?} else {
+			/*MultiLineEditBox area = new MultiLineEditBox(this.font, rx, this.top + 136, 144, 40,
+				Component.translatable("requestboard.create.reward_text_hint"), Component.translatable("requestboard.create.reward_text"));
+			*///?}
+			area.setValue(this.draftRewardText);
+			this.limitText(area, cfg.rewards.maxTextLength, value -> this.draftRewardText = value.replace('\n', ' '));
+			area.active = this.canEditRewards();
+			this.addRenderableWidget(area);
+		}
+		BoardRequest current = this.editingId == null ? null : ClientBoardState.find(this.editingId);
+		if (current != null && !current.rewards().isEmpty() && this.canEditRewards() && cfg.rewards.enabled && !this.showsTextTab(cfg)) {
+			Component label = Component.translatable(this.replaceRewards ? "requestboard.create.keep_rewards" : "requestboard.create.replace_rewards");
+			this.addRenderableWidget(Button.builder(label, b -> {
+				this.replaceRewards = !this.replaceRewards;
+				this.draftRewards.clear();
+				this.rebuildWidgets();
+			}).bounds(this.left + 20, this.top + 208, 152, 16).build());
+		}
 	}
 
 	/**
@@ -508,8 +856,9 @@ public class RequestBoardScreen extends Screen {
 			if (hint != null && empty && !widget.isFocused()) {
 				g.text(this.font, this.truncate(hint, w - 8), x + 4, y + (multi ? 4 : (h - 8) / 2), HINT, false);
 			}
-			if (multi && cfg().maxDetailsLength > 0) {
-				String counter = this.draftDetails.length() + "/" + cfg().maxDetailsLength;
+			java.util.function.Supplier<String> counterText = this.fieldCounters.get(widget);
+			if (counterText != null) {
+				String counter = counterText.get();
 				g.text(this.font, counter, x + w - this.font.width(counter) - 2, y + h - 9, INK_SOFT, false);
 			}
 		}
@@ -567,12 +916,24 @@ public class RequestBoardScreen extends Screen {
 			this.setCreateError(Component.translatable("requestboard.error.harvest_needs_objective"));
 			return;
 		}
+		boolean editing = this.editingId != null;
+		boolean sendPicks = !editing || this.replaceRewards;
 		List<RBPayloads.RewardPick> rewards = new ArrayList<>();
-		this.draftRewards.forEach((slot, count) -> rewards.add(new RBPayloads.RewardPick(slot, count)));
-		int minutes = cfg.timeLimit.enabled ? Math.max(0, parse(this.draftDuration)) : 0;
+		if (sendPicks) {
+			this.draftRewards.forEach((slot, count) -> rewards.add(new RBPayloads.RewardPick(slot, count)));
+		}
+		int minutes;
+		if (editing) {
+			// -1 keeps the current time limit, 0 removes it, more restarts it from now.
+			minutes = this.durationTouched ? Math.max(0, parse(this.draftDuration)) : -1;
+		} else {
+			minutes = cfg.timeLimit.enabled ? Math.max(0, parse(this.draftDuration)) : 0;
+		}
 		this.waitingForServer = true;
 		this.createMessage = null;
-		ClientPlayNetworking.send(new RBPayloads.CreateRequest(this.draftCategory, this.draftTitle.strip(), this.draftDetails.strip(), objectives, rewards, minutes));
+		ClientPlayNetworking.send(new RBPayloads.CreateRequest(java.util.Optional.ofNullable(this.editingId), this.draftCategory,
+			this.draftTitle.strip(), this.draftDetails.strip(), objectives, rewards, editing && this.replaceRewards,
+			this.draftRewardText.strip(), minutes));
 		this.rebuildWidgets();
 	}
 
@@ -599,12 +960,15 @@ public class RequestBoardScreen extends Screen {
 
 	private void openDetail(BoardRequest request) {
 		this.selectedId = request.id();
+		this.detailScroll = 0;
 		this.pendingConfirm = null;
 		this.rebuildWidgets();
 	}
 
 	private void closeDetail() {
 		this.selectedId = null;
+		this.detailScroll = 0;
+		this.contributionId = null;
 		this.pendingConfirm = null;
 		this.rebuildWidgets();
 	}
@@ -672,8 +1036,17 @@ public class RequestBoardScreen extends Screen {
 			this.pickerScroll = Math.max(0, this.pickerScroll - scrollY);
 			return true;
 		}
+		if (this.contributionId != null) {
+			BoardRequest r = ClientBoardState.find(this.contributionId);
+			int max = r == null ? 0 : Math.max(0, r.objectives().size() - contributionRows(r.objectives().size()));
+			int before = this.contributionScroll;
+			this.contributionScroll = Math.max(0, Math.min(max, this.contributionScroll - (int) Math.signum(scrollY)));
+			if (before != this.contributionScroll) this.rebuildWidgets();
+			return true;
+		}
 		if (this.selectedId != null) {
-			return false;
+			this.detailScroll = Math.max(0, Math.min(this.detailMaxScroll, this.detailScroll - scrollY * 18));
+			return true;
 		}
 		switch (this.tab) {
 			case BOARD -> this.boardScroll = Math.max(0, this.boardScroll - step);
@@ -705,6 +1078,11 @@ public class RequestBoardScreen extends Screen {
 		if (key == InputConstants.KEY_ESCAPE) {
 			if (this.pickerOpen) {
 				this.pickerOpen = false;
+				this.rebuildWidgets();
+				return true;
+			}
+			if (this.contributionId != null) {
+				this.contributionId = null;
 				this.rebuildWidgets();
 				return true;
 			}
@@ -757,7 +1135,10 @@ public class RequestBoardScreen extends Screen {
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float a) {
 		super.render(graphics, mouseX, mouseY, a);
-		if (this.frame != null) this.frame.flush();
+		if (this.frame != null) {
+			this.drawLegacyCounters(this.frame);
+			this.frame.flush();
+		}
 	}
 	*///?}
 
@@ -781,7 +1162,9 @@ public class RequestBoardScreen extends Screen {
 		}
 
 		g.underOverlay = false;
-		if (selected != null && this.tab != Tab.CREATE) {
+		if (selected != null && this.tab != Tab.CREATE && selected.id().equals(this.contributionId)) {
+			this.renderContribution(g, selected, mouseX, mouseY);
+		} else if (selected != null && this.tab != Tab.CREATE) {
 			this.renderDetail(g, selected, mouseX, mouseY);
 		} else if (this.pickerOpen && this.tab == Tab.CREATE) {
 			this.renderPicker(g, mouseX, mouseY);
@@ -869,7 +1252,7 @@ public class RequestBoardScreen extends Screen {
 		g.fill(x + 1, y + 1, x + 3, y + h - 1, r.category().color());
 
 		UUID me = this.myId();
-		this.head(g, r.creator(), x + 6, y + 5, 16);
+		this.head(g, r.creator(), x + 6, y + 3, 16);
 		Component badge = null;
 		int badgeColor = GOLD;
 		if (r.creator().equals(me)) {
@@ -879,21 +1262,21 @@ public class RequestBoardScreen extends Screen {
 			badgeColor = GREEN;
 		}
 		int badgeW = badge == null ? 0 : this.font.width(badge) + 4;
-		g.text(this.font, this.ellipsis(r.creatorName(), w - 30 - badgeW), x + 26, y + 5, WHITE, true);
+		g.text(this.font, this.ellipsis(r.creatorName(), w - 30 - badgeW), x + 26, y + 3, WHITE, true);
 		if (badge != null) {
-			g.text(this.font, badge, x + w - badgeW, y + 5, badgeColor, true);
+			g.text(this.font, badge, x + w - badgeW, y + 3, badgeColor, true);
 		}
 
-		g.text(this.font, Component.translatable(r.category().translationKey()), x + 26, y + 15, r.category().color(), true);
+		g.text(this.font, Component.translatable(r.category().translationKey()), x + 26, y + 12, r.category().color(), true);
 		if (r.hasTimeLimit()) {
 			Component time = this.timeLeft(r);
-			g.text(this.font, time, x + w - this.font.width(time) - 4, y + 15, this.timeColor(r), true);
+			g.text(this.font, time, x + w - this.font.width(time) - 4, y + 12, this.timeColor(r), true);
 		}
 
-		g.text(this.font, this.ellipsis(r.title(), w - 10), x + 6, y + 26, CREAM, true);
+		g.text(this.font, this.ellipsis(r.title(), w - 10), x + 6, y + 22, CREAM, true);
 
 		// Objectives on the left, rewards on the right.
-		int iconY = y + 34;
+		int iconY = y + 31;
 		int half = (w - 12) / 2;
 		int maxObj = Math.max(1, half / 18);
 		for (int i = 0; i < Math.min(maxObj, r.objectives().size()); i++) {
@@ -901,13 +1284,28 @@ public class RequestBoardScreen extends Screen {
 			boolean more = i == maxObj - 1 && r.objectives().size() > maxObj;
 			this.objectiveIcon(g, entry, x + 6 + i * 18, iconY, mouseX, mouseY, more ? r.objectives().size() - maxObj : 0);
 		}
-		if (!r.rewards().isEmpty()) {
+		if (cfg().contributions.enabled && !r.objectives().isEmpty() && r.hasContributions()) {
+			int barW = half - 2;
+			int filled = Math.max(1, Math.round(barW * Math.min(1F, r.progress())));
+			g.fill(x + 6, iconY + 19, x + 6 + barW, iconY + 21, 0x70FFFFFF);
+			g.fill(x + 6, iconY + 19, x + 6 + filled, iconY + 21, r.progress() >= 1F ? GREEN : 0xFFFFB020);
+		}
+		if (r.hasAnyReward()) {
 			int maxRew = Math.max(1, (half - 10) / 18);
+			if (!r.rewardText().isEmpty()) maxRew = Math.max(1, maxRew - 2);
 			int shown = Math.min(maxRew, r.rewards().size());
-			int rx = x + w - 6 - shown * 18;
+			int textW = r.rewardText().isEmpty() ? 0 : Math.min(this.font.width(r.rewardText()), half - 10 - shown * 18);
+			int rx = x + w - 6 - shown * 18 - (textW > 0 ? textW + 4 : 0);
 			g.text(this.font, "+", rx - 8, iconY + 4, GOLD, true);
 			for (int i = 0; i < shown; i++) {
 				this.rewardIcon(g, r.rewards().get(i), rx + i * 18, iconY, mouseX, mouseY);
+			}
+			if (textW > 0) {
+				int tx = rx + shown * 18 + (shown > 0 ? 4 : 0);
+				g.text(this.font, this.ellipsis(r.rewardText(), textW), tx, iconY + 4, GOLD, true);
+				if (mouseX >= tx && mouseX < tx + textW && mouseY >= iconY && mouseY < iconY + 16) {
+					g.setComponentTooltipForNextFrame(this.font, List.of(Component.literal(r.rewardText())), mouseX, mouseY);
+				}
 			}
 		}
 
@@ -1091,15 +1489,22 @@ public class RequestBoardScreen extends Screen {
 		g.fill(x, y, x + w, y + 1, 0x603B2A14);
 		y += 4;
 
+		// Everything below scrolls inside the scroll, between the header and the buttons.
+		boolean creatorRow = r.creator().equals(this.myId()) && !this.contributionTargets(r).isEmpty();
+		int bodyTop = y;
+		int bodyBottom = py + PH - (creatorRow ? 58 : 38);
+		if (mouseY < bodyTop || mouseY >= bodyBottom) {
+			mouseX = -1;
+			mouseY = -1;
+		}
+		g.enableScissor(px + 8, bodyTop, px + PW - 8, bodyBottom);
+		y -= (int) this.detailScroll;
+
 		if (!r.details().isEmpty()) {
 			List<FormattedCharSequence> lines = this.font.split(Component.literal(r.details()), w);
-			int maxLines = 5;
-			for (int i = 0; i < Math.min(maxLines, lines.size()); i++) {
-				g.text(this.font, lines.get(i), x, y, INK, false);
+			for (FormattedCharSequence line : lines) {
+				g.text(this.font, line, x, y, INK, false);
 				y += 9;
-			}
-			if (lines.size() > maxLines) {
-				g.text(this.font, "…", x + w - 6, y - 9, INK, false);
 			}
 			y += 3;
 		}
@@ -1109,6 +1514,25 @@ public class RequestBoardScreen extends Screen {
 		if (r.objectives().isEmpty()) {
 			g.text(this.font, Component.translatable("requestboard.none"), x + 2, y + 2, INK_SOFT, false);
 			y += 12;
+		} else if (cfg().contributions.enabled) {
+			// Each item with how much the participants said they have.
+			int cell = 73;
+			int perRow = Math.max(1, w / cell);
+			for (int i = 0; i < r.objectives().size(); i++) {
+				ObjectiveEntry wanted = r.objectives().get(i);
+				int cx = x + (i % perRow) * cell;
+				int cy = y + (i / perRow) * 18;
+				ItemStack stack = wanted.displayStack();
+				g.item(stack, cx, cy);
+				int have = Math.min(r.contributedFor(wanted), wanted.count());
+				boolean done = have >= wanted.count();
+				String text = shortCount(have) + "/" + shortCount(wanted.count());
+				g.text(this.font, text, cx + 18, cy + 4, done ? DARK_GREEN : have > 0 ? 0xFF8A5A00 : INK, false);
+				if (mouseX >= cx && mouseX < cx + cell - 2 && mouseY >= cy && mouseY < cy + 16) {
+					g.setComponentTooltipForNextFrame(this.font, this.contributionTooltip(r, wanted), mouseX, mouseY);
+				}
+			}
+			y += ((r.objectives().size() - 1) / perRow + 1) * 18;
 		} else {
 			int perRow = w / 20;
 			for (int i = 0; i < r.objectives().size(); i++) {
@@ -1121,24 +1545,49 @@ public class RequestBoardScreen extends Screen {
 		if (!r.rewards().isEmpty() && !r.rewardsEscrowed()) {
 			Component hand = Component.translatable("requestboard.reward.by_hand");
 			g.text(this.font, hand, x + w - this.font.width(hand), y, INK_SOFT, false);
+		} else if (!r.rewards().isEmpty() && cfg().rewards.splitMode == RBConfig.SplitMode.PRORATA
+				&& cfg().contributions.enabled && cfg().effectiveAutoDispatch() && !r.objectives().isEmpty()) {
+			Component split = Component.translatable("requestboard.reward.split_prorata");
+			g.text(this.font, split, x + w - this.font.width(split), y, INK_SOFT, false);
 		}
 		y += 10;
-		if (r.rewards().isEmpty()) {
+		if (!r.hasAnyReward()) {
 			g.text(this.font, Component.translatable("requestboard.none"), x + 2, y + 2, INK_SOFT, false);
 			y += 12;
 		} else {
-			for (int i = 0; i < r.rewards().size(); i++) {
-				this.rewardIcon(g, r.rewards().get(i), x + i * 20, y, mouseX, mouseY);
+			if (!r.rewards().isEmpty()) {
+				for (int i = 0; i < r.rewards().size(); i++) {
+					this.rewardIcon(g, r.rewards().get(i), x + i * 20, y, mouseX, mouseY);
+				}
+				y += 18;
 			}
-			y += 18;
+			if (!r.rewardText().isEmpty()) {
+				List<FormattedCharSequence> lines = this.font.split(Component.literal(r.rewardText()), w);
+				for (int i = 0; i < Math.min(2, lines.size()); i++) {
+					g.text(this.font, lines.get(i), x + 2, y, 0xFF7A4A00, false);
+					y += 9;
+				}
+				y += 2;
+			}
 		}
 
 		Component accepted = Component.translatable("requestboard.accepted_by", this.acceptorNames(r));
-		List<FormattedCharSequence> acceptedLines = this.font.split(accepted, w);
-		for (int i = 0; i < Math.min(2, acceptedLines.size()); i++) {
-			if (y + 9 > py + PH - 36) break;
-			g.text(this.font, acceptedLines.get(i), x, y, INK, false);
+		for (FormattedCharSequence line : this.font.split(accepted, w)) {
+			g.text(this.font, line, x, y, INK, false);
 			y += 9;
+		}
+		g.disableScissor();
+
+		int contentH = y + (int) this.detailScroll - bodyTop;
+		int viewH = bodyBottom - bodyTop;
+		this.detailMaxScroll = Math.max(0, contentH - viewH + 2);
+		if (this.detailScroll > this.detailMaxScroll) this.detailScroll = this.detailMaxScroll;
+		if (this.detailMaxScroll > 0) {
+			int trackX = px + PW - 16;
+			int thumbH = Math.max(12, viewH * viewH / Math.max(1, contentH));
+			int thumbY = bodyTop + (int) ((viewH - thumbH) * (this.detailScroll / this.detailMaxScroll));
+			g.fill(trackX, bodyTop, trackX + 3, bodyBottom, 0x303B2A14);
+			g.fill(trackX, thumbY, trackX + 3, thumbY + thumbH, 0xB06B5434);
 		}
 	}
 
@@ -1154,12 +1603,13 @@ public class RequestBoardScreen extends Screen {
 
 		Component header = this.waitingForServer
 			? Component.translatable("requestboard.create.sending")
-			: this.createMessage != null ? this.createMessage : Component.translatable("requestboard.create.header").withStyle(ChatFormatting.BOLD);
+			: this.createMessage != null ? this.createMessage
+			: Component.translatable(this.editingId != null ? "requestboard.create.header_edit" : "requestboard.create.header").withStyle(ChatFormatting.BOLD);
 		int headerColor = this.createMessage != null && !this.waitingForServer ? (this.createMessageIsError ? DARK_RED : DARK_GREEN) : INK;
 		FormattedCharSequence headerLine = this.truncate(header, LW - 40);
 		g.text(this.font, headerLine, this.left + (W - this.font.width(headerLine)) / 2, this.top + 20, headerColor, false);
 
-		if (cfg.timeLimit.enabled) {
+		if (this.showsDuration()) {
 			Component label = Component.translatable("requestboard.create.duration");
 			g.text(this.font, label, this.left + 266 - this.font.width(label), this.top + 36, INK, false);
 		}
@@ -1184,26 +1634,51 @@ public class RequestBoardScreen extends Screen {
 			int color = count <= 0 || count > max ? DARK_RED : INK_SOFT;
 			String stacks = count > 0 && count != Integer.MAX_VALUE ? stackText(count, stack.getMaxStackSize()) : "";
 			g.text(this.font, this.font.plainSubstrByWidth(stacks, 66), x + 68, ry + 4, color, false);
-			this.miniButton(g, Component.literal("✕"), x + 136, ry + 1, 14, 14, DARK_RED, mouseX, mouseY, interactive, b -> {
-				this.draftObjectives.remove(index);
-				this.rebuildWidgets();
-			});
+			if (this.canEditObjectives()) {
+				this.miniButton(g, Component.literal("✕"), x + 136, ry + 1, 14, 14, DARK_RED, mouseX, mouseY, interactive, b -> {
+					this.draftObjectives.remove(index);
+					this.rebuildWidgets();
+				});
+			}
 		}
 		if (this.draftObjectives.size() > OBJ_ROWS) {
-			String pos = (this.objectiveScroll + 1) + "-" + Math.min(this.draftObjectives.size(), this.objectiveScroll + OBJ_ROWS) + "/" + this.draftObjectives.size();
-			g.text(this.font, pos, x + 60 - this.font.width(pos), this.top + 113, INK_SOFT, false);
+			Component pos = Component.translatable("requestboard.create.objective_scroll", this.objectiveScroll + 1,
+				Math.min(this.draftObjectives.size(), this.objectiveScroll + OBJ_ROWS), this.draftObjectives.size());
+			g.text(this.font, this.truncate(pos, 150), x, this.top + 126 + OBJ_ROWS * 18 + 1, INK_SOFT, false);
 		}
 
 		// Rewards column
 		int rx = this.left + 180;
-		g.text(this.font, Component.translatable("requestboard.reward").withStyle(ChatFormatting.BOLD), rx, this.top + 113, INK, false);
-		if (!cfg.rewards.enabled) {
+		boolean both = cfg.rewards.enabled && cfg.rewards.textEnabled;
+		Component rewardLabel = Component.translatable("requestboard.reward");
+		g.text(this.font, both ? rewardLabel : rewardLabel.copy().withStyle(ChatFormatting.BOLD), rx, this.top + 113, INK, false);
+		if (!cfg.rewards.enabled && !cfg.rewards.textEnabled) {
 			g.textWithWordWrap(this.font, Component.translatable("requestboard.create.rewards_disabled"), rx, this.top + 128, 140, INK_SOFT, false);
 			return;
 		}
-		String counter = "(" + this.draftRewards.size() + "/" + cfg.rewards.maxRewardStacks + ")";
-		int labelW = this.font.width(Component.translatable("requestboard.reward").withStyle(ChatFormatting.BOLD));
-		g.text(this.font, counter, rx + labelW + 4, this.top + 113, INK_SOFT, false);
+		if (this.showsTextTab(cfg)) {
+			g.text(this.font, Component.translatable("requestboard.create.reward_text_label"), rx, this.top + 125, INK, false);
+			g.textWithWordWrap(this.font, Component.translatable("requestboard.create.reward_text_note"), rx, this.top + 180, 144, INK_SOFT, false);
+			return;
+		}
+		BoardRequest edited = this.editingId == null ? null : ClientBoardState.find(this.editingId);
+		boolean keepCurrent = edited != null && !this.replaceRewards && !edited.rewards().isEmpty();
+		if (keepCurrent) {
+			// Current item rewards, shown as they are.
+			int cy = this.top + 122;
+			for (int i = 0; i < edited.rewards().size(); i++) {
+				this.rewardIcon(g, edited.rewards().get(i), rx + i * 16, cy, interactive ? mouseX : -1, interactive ? mouseY : -1);
+			}
+			if (this.canEditRewards()) {
+				g.textWithWordWrap(this.font, Component.translatable("requestboard.create.keep_rewards_hint"), rx, this.top + 142, 144, INK_SOFT, false);
+			}
+			return;
+		}
+		if (!both) {
+			String counter = "(" + this.draftRewards.size() + "/" + cfg.rewards.maxRewardStacks + ")";
+			int labelW = this.font.width(rewardLabel.copy().withStyle(ChatFormatting.BOLD));
+			g.text(this.font, counter, rx + labelW + 4, this.top + 113, INK_SOFT, false);
+		}
 
 		var inventory = this.minecraft.player == null ? null : this.minecraft.player.getInventory();
 		if (inventory == null) return;
@@ -1351,6 +1826,25 @@ public class RequestBoardScreen extends Screen {
 			lines.add(Component.literal(entry.count() + " · " + stackText(entry.count(), stack.getMaxStackSize())).withStyle(ChatFormatting.GRAY));
 			g.setComponentTooltipForNextFrame(this.font, lines, mouseX, mouseY);
 		}
+	}
+
+	private List<Component> contributionTooltip(BoardRequest r, ObjectiveEntry wanted) {
+		List<Component> lines = new ArrayList<>();
+		lines.add(wanted.displayStack().getHoverName());
+		int have = r.contributedFor(wanted);
+		int missing = Math.max(0, wanted.count() - have);
+		lines.add(Component.translatable("requestboard.contribution.summary", wanted.count(), have, missing).withStyle(ChatFormatting.GRAY));
+		int stock = BoardRequest.amountIn(r.ownStock(), wanted);
+		if (stock > 0) {
+			lines.add(Component.translatable("requestboard.contribution.stock_line", r.creatorName(), stock).withStyle(ChatFormatting.GOLD));
+		}
+		for (Acceptor acceptor : r.acceptors()) {
+			int amount = acceptor.amountFor(wanted.item());
+			if (amount > 0) {
+				lines.add(Component.literal("  " + acceptor.name() + " : " + amount + (acceptor.confirmed() ? " ✔" : "")).withStyle(ChatFormatting.AQUA));
+			}
+		}
+		return lines;
 	}
 
 	private void rewardIcon(Gfx g, ItemStack stack, int x, int y, int mouseX, int mouseY) {

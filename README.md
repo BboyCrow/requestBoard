@@ -12,7 +12,10 @@ A shared notice board for Minecraft servers (Fabric — Minecraft **1.21.1**, **
 - **Detail view** on a parchment scroll, with Accept / Withdraw / Close / Delete. Several players can accept the same request, and everyone can see who accepted it.
 - **New request page**: category, title, details, time limit, requested items picked from a searchable list (any amount, counted in stacks), and rewards clicked straight from your inventory.
 - **My contracts**: your requests (close or delete in one click, with confirmation) and the contracts you accepted.
-- **Rewards**: optionally withdrawn when the request is posted. On close, they are split evenly between the acceptors, and the remainder goes to a random player, the first to accept or back to the creator. When a request is deleted or expires, the rewards go back to the creator. Items owed to offline players are delivered at their next login.
+- **Edit your requests**: an *Edit* button in the request view changes the category, title, details, objective, reward and time limit (add, change or remove it). Each part can be locked in the config.
+- **Contributions**: players who accepted a request say how many of each requested item they have (*My contribution*). The request shows what is pledged and what is still missing, and the card gets a progress bar. Informative only: nothing is taken from inventories. The creator can add what they already have in stock, and correct each participant's contribution (marked ✔).
+- **Text rewards**: besides items, a request can promise a short written reward ("a house built for you").
+- **Rewards**: optionally withdrawn when the request is posted. On close, they are split between the acceptors, evenly or in proportion to their contributions, and the remainder goes to a random player, the first to accept or back to the creator. When a request is deleted or expires, the rewards go back to the creator. Items owed to offline players are delivered at their next login.
 - **Two looks**: *Modern* (sticky notes on a cork-like board) or *Adventure* (an old quest board with bounty posters and a dagger). Each player switches with the ✦ button next to the tabs; the server sets the default.
 - **Advancements**: their own tab, from crafting a board to taking part in 100 completed contracts (see below).
 - **Server-authoritative**: every action is validated server-side, and the server's config is synced to clients.
@@ -43,7 +46,7 @@ F   F     B = book and quill
 
 ## Configuration
 
-`config/requestboard.json` is created on first launch. Each option is explained in the file's `_help` section. Reload it in game with `/requestboard reload` (operators).
+`config/requestboard.json` is created on first launch. Each option is explained in the file's `_help` section. Operators can also change it in game with **`/requestboard config`**, an editor with a description of every setting, or reload the file with `/requestboard reload`. Both commands are for operators only.
 
 | Option | Default | Meaning |
 |---|---|---|
@@ -59,10 +62,18 @@ F   F     B = book and quill
 | `broadcastNewRequests` | true | Announce new requests in chat |
 | `playSounds` | true | Sounds on board events |
 | `defaultStyle` | MODERN | Board look for players who haven't picked one: `MODERN` or `FANTASY` |
+| `rewards.textEnabled` | true | Allow a short text reward |
+| `rewards.maxTextLength` | 60 | Max length of the text reward (8–200) |
+| `editing.enabled` | true | Let creators edit their requests |
+| `editing.category/title/details/objectives/rewards/timeLimit` | true | Which parts can be edited (old item rewards go back to the creator when replaced) |
+| `contributions.enabled` | true | Let participants declare what they have for a request |
+| `contributions.creatorStock` | true | The creator can declare what they already have |
+| `contributions.creatorCanAdjust` | true | The creator can correct participants' contributions |
 | `categories.announcement/service/harvest` | true | Enable each category |
 | `rewards.enabled` | true | Allow rewards |
 | `rewards.autoWithdraw` | true | Take rewards from the creator's inventory when posting |
 | `rewards.autoDispatch` | true | Split rewards between acceptors on close (needs `autoWithdraw`) |
+| `rewards.splitMode` | EVEN | `EVEN` (equal shares) or `PRORATA` (in proportion to each participant's declared contribution) |
 | `rewards.remainderMode` | RANDOM | `RANDOM`, `FIRST_COME` or `CREATOR` |
 | `rewards.maxRewardStacks` | 9 | Reward stacks per request (1–9) |
 | `timeLimit.enabled` | true | Allow time limits (expired requests disappear) |

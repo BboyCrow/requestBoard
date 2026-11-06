@@ -34,6 +34,15 @@ public class RequestBoardClient implements ClientModInitializer {
 				/*context.client().player.displayClientMessage(payload.message(), false);*/
 			}
 		});
+		ClientPlayNetworking.registerGlobalReceiver(RBPayloads.OpenConfig.TYPE, (payload, context) -> {
+			RBConfig edited = RBConfig.fromJson(payload.json());
+			context.client().execute(() -> {
+				//? if >=26.1 {
+				context.client().gui.setScreen(new io.github.bboycrow.requestboard.client.screen.RBConfigScreen(edited));
+				//?} else
+				/*context.client().setScreen(new io.github.bboycrow.requestboard.client.screen.RBConfigScreen(edited));*/
+			});
+		});
 		ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> ClientBoardState.clear());
 
 		//? if <1.21.4 {

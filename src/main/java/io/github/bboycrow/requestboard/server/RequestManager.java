@@ -1,6 +1,7 @@
 package io.github.bboycrow.requestboard.server;
 
 import io.github.bboycrow.requestboard.Compat;
+import io.github.bboycrow.requestboard.RequestBoard;
 import io.github.bboycrow.requestboard.config.RBConfig;
 import io.github.bboycrow.requestboard.data.Acceptor;
 import io.github.bboycrow.requestboard.data.BoardRequest;
@@ -103,20 +104,22 @@ public final class RequestManager {
 		}
 	}
 
-	// ---- Creation ----
+	// ---- Creation and editing ----
 
 	public static void create(ServerPlayer player, RBPayloads.CreateRequest packet) {
-		Component error = tryCreate(player, packet);
+		Component error = packet.editId().isPresent() ? tryEdit(player, packet, packet.editId().get()) : tryCreate(player, packet);
 		if (error != null) {
 			ServerPlayNetworking.send(player, new RBPayloads.CreateResult(false, error));
 		}
 	}
 
-	private static @Nullable Component tryCreate(ServerPlayer player, RBPayloads.CreateRequest packet) {
-		RBConfig cfg = config();
-		MinecraftServer server = Compat.server(player);
-		RequestStorage storage = storage(server);
+	/** Content of a request, checked against the config. */
+	private record Content(Category category, String title, String details, List<ObjectiveEntry> objectives, String rewardText) {
+	}
 
+	/** Validates the text parts of a request; returns an error, or null with the result in {@code out[0]}. */
+	private static @Nullable Component validateContent(RBPayloads.CreateRequest packet, Content[] out) {
+		RBConfig cfg = config();
 		Category category = packet.category();
 		if (!cfg.isCategoryEnabled(category)) {
 			return Component.translatable("requestboard.error.category_disabled");
@@ -132,11 +135,12 @@ public final class RequestManager {
 		if (details.length() > cfg.maxDetailsLength) {
 			return Component.translatable("requestboard.error.details_too_long", cfg.maxDetailsLength);
 		}
-		if (cfg.maxActiveRequestsPerPlayer > 0) {
-			long active = storage.requests().stream().filter(r -> r.creator().equals(player.getUUID())).count();
-			if (active >= cfg.maxActiveRequestsPerPlayer) {
-				return Component.translatable("requestboard.error.too_many_requests", cfg.maxActiveRequestsPerPlayer);
-			}
+		String rewardText = sanitize(packet.rewardText());
+		if (!rewardText.isEmpty() && !cfg.rewards.textEnabled) {
+			return Component.translatable("requestboard.error.text_reward_disabled");
+		}
+		if (rewardText.length() > cfg.rewards.maxTextLength) {
+			return Component.translatable("requestboard.error.text_reward_too_long", cfg.rewards.maxTextLength);
 		}
 
 		// Objectives: merge duplicates, validate amounts.
@@ -162,6 +166,70 @@ public final class RequestManager {
 		if (category == Category.HARVEST && cfg.harvestRequiresObjective && objectives.isEmpty()) {
 			return Component.translatable("requestboard.error.harvest_needs_objective");
 		}
+		out[0] = new Content(category, title, details, objectives, rewardText);
+		return null;
+	}
+
+	/** Checks the reward picks against the player's inventory; returns an error, or null with the picks in {@code out}. */
+	private static @Nullable Component validatePicks(ServerPlayer player, List<RBPayloads.RewardPick> rawPicks, Map<Integer, Integer> out) {
+		RBConfig cfg = config();
+		for (RBPayloads.RewardPick pick : rawPicks) {
+			if (pick.slot() < 0 || pick.slot() >= MAIN_INVENTORY_SIZE || pick.count() <= 0) {
+				return Component.translatable("requestboard.error.invalid_reward");
+			}
+			out.merge(pick.slot(), pick.count(), Integer::sum);
+		}
+		if (!out.isEmpty() && !cfg.rewards.enabled) {
+			return Component.translatable("requestboard.error.rewards_disabled");
+		}
+		if (out.size() > cfg.rewards.maxRewardStacks) {
+			return Component.translatable("requestboard.error.too_many_rewards", cfg.rewards.maxRewardStacks);
+		}
+		Inventory inventory = player.getInventory();
+		for (Map.Entry<Integer, Integer> pick : out.entrySet()) {
+			ItemStack inSlot = inventory.getItem(pick.getKey());
+			if (inSlot.isEmpty() || inSlot.getCount() < pick.getValue()) {
+				return Component.translatable("requestboard.error.reward_missing");
+			}
+		}
+		return null;
+	}
+
+	/** Withdraws (or just copies, if withdrawal is off) the validated picks. */
+	private static List<ItemStack> takePicks(ServerPlayer player, Map<Integer, Integer> picks, boolean withdraw) {
+		Inventory inventory = player.getInventory();
+		List<ItemStack> rewards = new ArrayList<>();
+		for (Map.Entry<Integer, Integer> pick : picks.entrySet()) {
+			ItemStack taken = withdraw
+				? inventory.removeItem(pick.getKey(), pick.getValue())
+				: inventory.getItem(pick.getKey()).copyWithCount(pick.getValue());
+			if (!taken.isEmpty()) {
+				rewards.add(taken);
+			}
+		}
+		if (withdraw && !rewards.isEmpty()) {
+			inventory.setChanged();
+		}
+		return rewards;
+	}
+
+	private static @Nullable Component tryCreate(ServerPlayer player, RBPayloads.CreateRequest packet) {
+		RBConfig cfg = config();
+		MinecraftServer server = Compat.server(player);
+		RequestStorage storage = storage(server);
+
+		Content[] content = new Content[1];
+		Component error = validateContent(packet, content);
+		if (error != null) {
+			return error;
+		}
+		Content c = content[0];
+		if (cfg.maxActiveRequestsPerPlayer > 0) {
+			long active = storage.requests().stream().filter(r -> r.creator().equals(player.getUUID())).count();
+			if (active >= cfg.maxActiveRequestsPerPlayer) {
+				return Component.translatable("requestboard.error.too_many_requests", cfg.maxActiveRequestsPerPlayer);
+			}
+		}
 
 		// Time limit.
 		long now = System.currentTimeMillis();
@@ -176,61 +244,205 @@ public final class RequestManager {
 			expiresAt = now + packet.durationMinutes() * 60_000L;
 		}
 
-		// Rewards: validate picks against the real inventory, then withdraw (or copy).
 		Map<Integer, Integer> picks = new LinkedHashMap<>();
-		for (RBPayloads.RewardPick pick : packet.rewards()) {
-			if (pick.slot() < 0 || pick.slot() >= MAIN_INVENTORY_SIZE || pick.count() <= 0) {
-				return Component.translatable("requestboard.error.invalid_reward");
-			}
-			picks.merge(pick.slot(), pick.count(), Integer::sum);
-		}
-		if (!picks.isEmpty() && !cfg.rewards.enabled) {
-			return Component.translatable("requestboard.error.rewards_disabled");
-		}
-		if (picks.size() > cfg.rewards.maxRewardStacks) {
-			return Component.translatable("requestboard.error.too_many_rewards", cfg.rewards.maxRewardStacks);
-		}
-		Inventory inventory = player.getInventory();
-		for (Map.Entry<Integer, Integer> pick : picks.entrySet()) {
-			ItemStack inSlot = inventory.getItem(pick.getKey());
-			if (inSlot.isEmpty() || inSlot.getCount() < pick.getValue()) {
-				return Component.translatable("requestboard.error.reward_missing");
-			}
+		error = validatePicks(player, packet.rewards(), picks);
+		if (error != null) {
+			return error;
 		}
 		boolean withdraw = cfg.rewards.autoWithdraw;
-		List<ItemStack> rewards = new ArrayList<>();
-		for (Map.Entry<Integer, Integer> pick : picks.entrySet()) {
-			ItemStack taken = withdraw
-				? inventory.removeItem(pick.getKey(), pick.getValue())
-				: inventory.getItem(pick.getKey()).copyWithCount(pick.getValue());
-			if (!taken.isEmpty()) {
-				rewards.add(taken);
-			}
-		}
-		if (withdraw && !rewards.isEmpty()) {
-			inventory.setChanged();
-		}
+		List<ItemStack> rewards = takePicks(player, picks, withdraw);
 
 		BoardRequest request = new BoardRequest(
-			UUID.randomUUID(), player.getUUID(), Compat.name(player), category, title, details,
-			objectives, rewards, withdraw && !rewards.isEmpty(), now, expiresAt, List.of()
+			UUID.randomUUID(), player.getUUID(), Compat.name(player), c.category(), c.title(), c.details(),
+			c.objectives(), rewards, withdraw && !rewards.isEmpty(), now, expiresAt, List.of(), c.rewardText()
 		);
 		storage.add(request);
 		BoardAdvancements.sync(player, storage.addPosted(player.getUUID()));
 
-		ServerPlayNetworking.send(player, new RBPayloads.CreateResult(true, Component.translatable("requestboard.msg.created", title)));
+		ServerPlayNetworking.send(player, new RBPayloads.CreateResult(true, Component.translatable("requestboard.msg.created", c.title())));
 		playSound(player, SoundEvents.BOOK_PUT);
 		if (cfg.broadcastNewRequests) {
 			Component announce = Component.translatable("requestboard.msg.broadcast_new", Compat.name(player),
-				Component.translatable(category.translationKey()), title).withStyle(ChatFormatting.GOLD);
+				Component.translatable(c.category().translationKey()), c.title()).withStyle(ChatFormatting.GOLD);
+			// Everyone, the creator included, plus the server console.
 			for (ServerPlayer other : server.getPlayerList().getPlayers()) {
-				if (other != player) {
-					other.sendSystemMessage(announce);
-				}
+				other.sendSystemMessage(announce);
 			}
+			server.sendSystemMessage(announce);
 		}
 		broadcastRequests(server);
 		return null;
+	}
+
+	private static @Nullable Component tryEdit(ServerPlayer player, RBPayloads.CreateRequest packet, UUID id) {
+		RBConfig cfg = config();
+		MinecraftServer server = Compat.server(player);
+		RequestStorage storage = storage(server);
+		BoardRequest old = storage.get(id);
+		if (old == null) {
+			return Component.translatable("requestboard.error.not_found");
+		}
+		if (!old.creator().equals(player.getUUID())) {
+			return Component.translatable("requestboard.error.not_creator");
+		}
+		if (!cfg.editing.enabled) {
+			return Component.translatable("requestboard.error.editing_disabled");
+		}
+
+		// Parts that may not be edited keep their old value, whatever the client sent.
+		RBConfig.Editing can = cfg.editing;
+		RBPayloads.CreateRequest merged = new RBPayloads.CreateRequest(
+			packet.editId(),
+			can.category ? packet.category() : old.category(),
+			can.title ? packet.title() : old.title(),
+			can.details ? packet.details() : old.details(),
+			can.objectives ? packet.objectives() : old.objectives(),
+			packet.rewards(),
+			can.rewards && packet.replaceRewards(),
+			can.rewards ? packet.rewardText() : old.rewardText(),
+			packet.durationMinutes()
+		);
+		Content[] content = new Content[1];
+		Component error = validateContent(merged, content);
+		if (error != null) {
+			return error;
+		}
+		Content c = content[0];
+
+		List<ItemStack> rewards = old.rewards();
+		boolean escrowed = old.rewardsEscrowed();
+		if (merged.replaceRewards()) {
+			Map<Integer, Integer> picks = new LinkedHashMap<>();
+			error = validatePicks(player, merged.rewards(), picks);
+			if (error != null) {
+				return error;
+			}
+			// Take the new rewards first (the slots were checked), then give the old ones back.
+			boolean withdraw = cfg.rewards.autoWithdraw;
+			rewards = takePicks(player, picks, withdraw);
+			returnRewards(server, old, storage);
+			escrowed = withdraw && !rewards.isEmpty();
+		}
+
+		// Time limit: -1 keeps it, 0 removes it, more restarts it from now.
+		long expiresAt = old.expiresAt();
+		int minutes = merged.durationMinutes();
+		if (can.timeLimit && minutes >= 0) {
+			if (minutes == 0) {
+				expiresAt = 0;
+			} else {
+				if (!cfg.timeLimit.enabled) {
+					return Component.translatable("requestboard.error.time_limit_disabled");
+				}
+				if (cfg.timeLimit.maxMinutes > 0 && minutes > cfg.timeLimit.maxMinutes) {
+					return Component.translatable("requestboard.error.time_limit_too_long", cfg.timeLimit.maxMinutes);
+				}
+				expiresAt = System.currentTimeMillis() + minutes * 60_000L;
+			}
+		}
+
+		BoardRequest updated = old.edited(c.category(), c.title(), c.details(), c.objectives(), rewards, escrowed, c.rewardText(), expiresAt);
+		storage.add(updated);
+		ServerPlayNetworking.send(player, new RBPayloads.CreateResult(true, Component.translatable("requestboard.msg.edited", c.title())));
+		playSound(player, SoundEvents.BOOK_PAGE_TURN);
+		for (Acceptor acceptor : updated.acceptors()) {
+			notify(server, acceptor.id(), Component.translatable("requestboard.msg.acceptor_edited", updated.creatorName(), c.title())
+				.withStyle(ChatFormatting.YELLOW));
+		}
+		broadcastRequests(server);
+		return null;
+	}
+
+	// ---- Contributions ----
+
+	public static void updateContribution(ServerPlayer player, UUID requestId, UUID target, List<ObjectiveEntry> declared) {
+		RBConfig cfg = config();
+		MinecraftServer server = Compat.server(player);
+		RequestStorage storage = storage(server);
+		BoardRequest request = storage.get(requestId);
+		if (request == null) {
+			error(player, "requestboard.error.not_found");
+			return;
+		}
+		if (!cfg.contributions.enabled) {
+			error(player, "requestboard.error.contributions_disabled");
+			return;
+		}
+		List<ObjectiveEntry> amounts = BoardRequest.capTo(request.objectives(), declared);
+		boolean isCreator = request.creator().equals(player.getUUID());
+
+		if (isCreator && target.equals(player.getUUID())) {
+			// The creator's own stock.
+			if (!cfg.contributions.creatorStock) {
+				error(player, "requestboard.error.creator_stock_disabled");
+				return;
+			}
+			request.setOwnStock(amounts);
+		} else if (isCreator) {
+			// The creator corrects a participant.
+			if (!cfg.contributions.creatorCanAdjust) {
+				error(player, "requestboard.error.creator_adjust_disabled");
+				return;
+			}
+			Acceptor acceptor = request.acceptors().stream().filter(a -> a.id().equals(target)).findFirst().orElse(null);
+			if (acceptor == null) {
+				error(player, "requestboard.error.not_found");
+				return;
+			}
+			request.replaceAcceptor(acceptor.withContribution(amounts, true));
+			notify(server, acceptor.id(), Component.translatable("requestboard.msg.contribution_adjusted",
+				Compat.name(player), request.title()).withStyle(ChatFormatting.AQUA));
+		} else {
+			// A participant's own contribution.
+			if (!target.equals(player.getUUID())) {
+				error(player, "requestboard.error.not_creator");
+				return;
+			}
+			Acceptor acceptor = request.acceptors().stream().filter(a -> a.id().equals(player.getUUID())).findFirst().orElse(null);
+			if (acceptor == null) {
+				error(player, "requestboard.error.not_accepted");
+				return;
+			}
+			request.replaceAcceptor(acceptor.withContribution(amounts, false));
+			int percent = Math.round(request.progress() * 100);
+			notify(server, request.creator(), Component.translatable("requestboard.msg.creator_contribution",
+				Compat.name(player), request.title(), percent).withStyle(ChatFormatting.AQUA));
+		}
+		storage.setDirty();
+		player.sendSystemMessage(Component.translatable("requestboard.msg.contribution_saved", request.title()).withStyle(ChatFormatting.GREEN));
+		playSound(player, SoundEvents.BOOK_PAGE_TURN);
+		broadcastRequests(server);
+	}
+
+	// ---- Config editor (operators) ----
+
+	public static void openConfigEditor(ServerPlayer player) {
+		if (!ServerPlayNetworking.canSend(player, RBPayloads.OpenConfig.TYPE)) {
+			player.sendSystemMessage(Component.literal("RequestBoard must be installed on the client to use the config editor.").withStyle(ChatFormatting.RED));
+			return;
+		}
+		ServerPlayNetworking.send(player, new RBPayloads.OpenConfig(config().toJson()));
+	}
+
+	public static void saveConfig(ServerPlayer player, String json) {
+		if (!Compat.isOperator(player)) {
+			RequestBoard.LOGGER.warn("{} tried to change the RequestBoard config without being an operator", Compat.name(player));
+			error(player, "requestboard.error.not_operator");
+			return;
+		}
+		RBConfig parsed;
+		try {
+			parsed = RBConfig.fromJson(json);
+		} catch (RuntimeException e) {
+			error(player, "requestboard.error.invalid_config");
+			return;
+		}
+		RBConfig.replaceAndSave(parsed);
+		MinecraftServer server = Compat.server(player);
+		broadcastConfig(server);
+		Component done = Component.translatable("requestboard.msg.config_saved", Compat.name(player)).withStyle(ChatFormatting.GREEN);
+		player.sendSystemMessage(done);
+		server.sendSystemMessage(done);
 	}
 
 	private static String sanitize(String text) {
@@ -402,26 +614,52 @@ public final class RequestManager {
 			}
 		}
 
+		// Weight of each acceptor: 1 each (even split), or what they declared (pro rata).
 		int k = acceptors.size();
+		long[] weights = new long[k];
+		java.util.Arrays.fill(weights, 1);
+		if (cfg.rewards.splitMode == RBConfig.SplitMode.PRORATA && cfg.contributions.enabled) {
+			long[] declared = new long[k];
+			long sum = 0;
+			for (int i = 0; i < k; i++) {
+				for (ObjectiveEntry wanted : request.objectives()) {
+					declared[i] += Math.min(acceptors.get(i).amountFor(wanted.item()), wanted.count());
+				}
+				sum += declared[i];
+			}
+			if (sum > 0) {
+				weights = declared;
+			}
+		}
+		long totalWeight = 0;
+		List<Integer> eligible = new ArrayList<>();
+		for (int i = 0; i < k; i++) {
+			totalWeight += weights[i];
+			if (weights[i] > 0) eligible.add(i);
+		}
+
 		Map<UUID, List<ItemStack>> shares = new LinkedHashMap<>();
 		List<ItemStack> backToCreator = new ArrayList<>();
 		for (int p = 0; p < pools.size(); p++) {
 			ItemStack proto = pools.get(p);
 			int total = totals.get(p);
-			int base = total / k;
-			int remainder = total % k;
 			int[] amounts = new int[k];
-			java.util.Arrays.fill(amounts, base);
+			int given = 0;
+			for (int i = 0; i < k; i++) {
+				amounts[i] = (int) (total * weights[i] / totalWeight);
+				given += amounts[i];
+			}
+			// Items that can't be split evenly (always fewer than the number of eligible players).
+			int remainder = total - given;
 			if (remainder > 0) {
 				switch (cfg.rewards.remainderMode) {
 					case FIRST_COME -> {
-						for (int i = 0; i < remainder; i++) amounts[i]++;
+						for (int i = 0; i < remainder; i++) amounts[eligible.get(i % eligible.size())]++;
 					}
 					case RANDOM -> {
-						List<Integer> order = new ArrayList<>();
-						for (int i = 0; i < k; i++) order.add(i);
+						List<Integer> order = new ArrayList<>(eligible);
 						Collections.shuffle(order);
-						for (int i = 0; i < remainder; i++) amounts[order.get(i)]++;
+						for (int i = 0; i < remainder; i++) amounts[order.get(i % order.size())]++;
 					}
 					case CREATOR -> splitIntoStacks(proto, remainder, backToCreator);
 				}
